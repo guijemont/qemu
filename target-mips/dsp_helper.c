@@ -5897,6 +5897,506 @@ target_ulong helper_dinsv(CPUMIPSState *env, target_ulong rs, target_ulong rt)
 }
 #endif
 
+/** DSP Compare-Pick Sub-class insns **/
+#define CMPU_QB(name) \
+void helper_cmpu_ ## name ## _qb(CPUMIPSState *env, target_ulong rs, \
+                                 target_ulong rt)     \
+{                                                     \
+    uint8_t rs3, rs2, rs1, rs0;                       \
+    uint8_t rt3, rt2, rt1, rt0;                       \
+    uint32_t cc3 = 0, cc2 = 0, cc1 = 0, cc0 = 0;      \
+    uint32_t flag;                                    \
+                                                      \
+    rs3 = (rs & MIPSDSP_Q3) >> 24;                    \
+    rs2 = (rs & MIPSDSP_Q2) >> 16;                    \
+    rs1 = (rs & MIPSDSP_Q1) >>  8;                    \
+    rs0 =  rs & MIPSDSP_Q0;                           \
+                                                      \
+    rt3 = (rt & MIPSDSP_Q3) >> 24;                    \
+    rt2 = (rt & MIPSDSP_Q2) >> 16;                    \
+    rt1 = (rt & MIPSDSP_Q1) >>  8;                    \
+    rt0 =  rt & MIPSDSP_Q0;                           \
+                                                      \
+    cc3 = mipsdsp_cmp_##name(rs3, rt3);                \
+    cc2 = mipsdsp_cmp_##name(rs2, rt2);                \
+    cc1 = mipsdsp_cmp_##name(rs1, rt1);                \
+    cc0 = mipsdsp_cmp_##name(rs0, rt0);                \
+                                                      \
+    flag = (cc3 << 3) | (cc2 << 2) | (cc1 << 1) | cc0;\
+    set_DSPControl_24(env, flag, 4);                  \
+}
+
+CMPU_QB(eq)
+CMPU_QB(lt)
+CMPU_QB(le)
+
+#define CMPGU_QB(name) \
+target_ulong helper_cmpgu_ ## name ## _qb(target_ulong rs, target_ulong rt) \
+{                                                       \
+    uint8_t rs3, rs2, rs1, rs0;                         \
+    uint8_t rt3, rt2, rt1, rt0;                         \
+    uint8_t cc3 = 0, cc2 = 0, cc1 = 0, cc0 = 0;         \
+    uint32_t temp;                                      \
+                                                        \
+    rs3 = (rs & MIPSDSP_Q3) >> 24;                      \
+    rs2 = (rs & MIPSDSP_Q2) >> 16;                      \
+    rs1 = (rs & MIPSDSP_Q1) >>  8;                      \
+    rs0 =  rs & MIPSDSP_Q0;                             \
+                                                        \
+    rt3 = (rt & MIPSDSP_Q3) >> 24;                      \
+    rt2 = (rt & MIPSDSP_Q2) >> 16;                      \
+    rt1 = (rt & MIPSDSP_Q1) >>  8;                      \
+    rt0 =  rt & MIPSDSP_Q0;                             \
+                                                        \
+    cc3 = mipsdsp_cmp_##name(rs3, rt3);                  \
+    cc2 = mipsdsp_cmp_##name(rs2, rt2);                  \
+    cc1 = mipsdsp_cmp_##name(rs1, rt1);                  \
+    cc0 = mipsdsp_cmp_##name(rs0, rt0);                  \
+                                                        \
+    temp = (cc3 << 3) | (cc2 << 2) | (cc1 << 1) | cc0;  \
+                                                        \
+    return (target_ulong)temp;                          \
+}
+
+CMPGU_QB(eq)
+CMPGU_QB(lt)
+CMPGU_QB(le)
+
+#define CMP_PH(name) \
+void helper_cmp_##name##_ph(CPUMIPSState *env, target_ulong rs, \
+                            target_ulong rt)       \
+{                                                  \
+    int16_t rsh, rsl, rth, rtl;                    \
+    int32_t flag;                                  \
+    int32_t ccA = 0, ccB = 0;                      \
+                                                   \
+    rsh = (rs & MIPSDSP_HI) >> 16;                 \
+    rsl =  rs & MIPSDSP_LO;                        \
+    rth = (rt & MIPSDSP_HI) >> 16;                 \
+    rtl =  rt & MIPSDSP_LO;                        \
+                                                   \
+    ccB = mipsdsp_cmp_##name(rsh, rth);            \
+    ccA = mipsdsp_cmp_##name(rsl, rtl);            \
+                                                   \
+    flag = (ccB << 1) | ccA;                       \
+    set_DSPControl_24(env, flag, 2);               \
+}
+
+CMP_PH(eq)
+CMP_PH(lt)
+CMP_PH(le)
+
+#if defined(TARGET_MIPS64)
+#define CMPU_OB(name) \
+void helper_cmpu_ ## name ##_ob(CPUMIPSState *env, target_ulong rs, \
+                                target_ulong rt)        \
+{                                                       \
+    int i;                                              \
+    uint8_t rs_t[8], rt_t[8];                           \
+    uint32_t cond;                                      \
+                                                        \
+    cond = 0;                                           \
+                                                        \
+    for (i = 0; i < 8; i++) {                           \
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;         \
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;         \
+                                                        \
+        if (mipsdsp_cmp_##name(rs_t[i], rt_t[i])) {                     \
+            cond |= 0x01 << i;                          \
+        }                                               \
+    }                                                   \
+                                                        \
+    set_DSPControl_24(env, cond, 8);                    \
+}
+
+CMPU_OB(eq)
+CMPU_OB(lt)
+CMPU_OB(le)
+
+#define CMPGDU_OB(name) \
+target_ulong helper_cmpgdu_##name##_ob(CPUMIPSState *env,           \
+                                 target_ulong rs, target_ulong rt)  \
+{                                                     \
+    int i;                                            \
+    uint8_t rs_t[8], rt_t[8];                         \
+    uint32_t cond;                                    \
+                                                      \
+    cond = 0;                                         \
+                                                      \
+    for (i = 0; i < 8; i++) {                         \
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;       \
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;       \
+                                                      \
+        if (mipsdsp_cmp_##name(rs_t[i], rt_t[i])) {   \
+            cond |= 0x01 << i;                        \
+        }                                             \
+    }                                                 \
+                                                      \
+    set_DSPControl_24(env, cond, 8);                  \
+                                                      \
+    return (uint64_t)cond;                            \
+}
+
+CMPGDU_OB(eq)
+CMPGDU_OB(lt)
+CMPGDU_OB(le)
+
+#define CMPGU_OB(name) \
+target_ulong helper_cmpgu_##name##_ob(target_ulong rs, target_ulong rt) \
+{                                                                       \
+    int i;                                                              \
+    uint8_t rs_t[8], rt_t[8];                                           \
+    uint32_t cond;                                                      \
+                                                                        \
+    cond = 0;                                                           \
+                                                                        \
+    for (i = 0; i < 8; i++) {                                           \
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;                         \
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;                         \
+                                                                        \
+        if (mipsdsp_cmp_##name(rs_t[i], rt_t[i])) {                     \
+            cond |= 0x01 << i;                                          \
+        }                                                               \
+    }                                                                   \
+                                                                        \
+    return (uint64_t)cond;                                              \
+}
+
+CMPGU_OB(eq)
+CMPGU_OB(lt)
+CMPGU_OB(le)
+
+
+#define CMP_QH(name) \
+void helper_cmp_##name##_qh(CPUMIPSState *env, target_ulong rs, \
+                            target_ulong rt)                    \
+{                                                               \
+    uint16_t rs3, rs2, rs1, rs0;                                \
+    uint16_t rt3, rt2, rt1, rt0;                                \
+    uint32_t cond;                                              \
+                                                                \
+    cond = 0;                                                   \
+                                                                \
+    rs3 = (rs >> 48) & MIPSDSP_LO;                              \
+    rs2 = (rs >> 32) & MIPSDSP_LO;                              \
+    rs1 = (rs >> 16) & MIPSDSP_LO;                              \
+    rs0 = rs & MIPSDSP_LO;                                      \
+    rt3 = (rt >> 48) & MIPSDSP_LO;                              \
+    rt2 = (rt >> 32) & MIPSDSP_LO;                              \
+    rt1 = (rt >> 16) & MIPSDSP_LO;                              \
+    rt0 = rt & MIPSDSP_LO;                                      \
+                                                                \
+    if (mipsdsp_cmp_##name(rs3, rt3)) {                         \
+        cond |= 0x08;                                           \
+    }                                                           \
+                                                                \
+    if (mipsdsp_cmp_##name(rs2, rt2)) {                         \
+        cond |= 0x04;                                           \
+    }                                                           \
+                                                                \
+    if (mipsdsp_cmp_##name(rs1, rt1)) {                         \
+        cond |= 0x02;                                           \
+    }                                                           \
+                                                                \
+    if (mipsdsp_cmp_##name(rs0, rt0)) {                         \
+        cond |= 0x01;                                           \
+    }                                                           \
+                                                                \
+    set_DSPControl_24(env, cond, 4);                            \
+}
+
+CMP_QH(eq)
+CMP_QH(lt)
+CMP_QH(le)
+
+#define CMP_PW(name) \
+void helper_cmp_## name ##_pw(CPUMIPSState *env, target_ulong rs, \
+                              target_ulong rt)                    \
+{                                                                 \
+    uint32_t rs1, rs0;                                            \
+    uint32_t rt1, rt0;                                            \
+    uint32_t cond;                                                \
+                                                                  \
+    cond = 0;                                                     \
+                                                                  \
+    rs1 = (rs >> 32) & MIPSDSP_LLO;                               \
+    rs0 = rs & MIPSDSP_LLO;                                       \
+    rt1 = (rt >> 32) & MIPSDSP_LLO;                               \
+    rt0 = rt & MIPSDSP_LLO;                                       \
+                                                                  \
+    if (mipsdsp_cmp_##name(rs1, rt1)) {                           \
+        cond |= 0x2;                                              \
+    }                                                             \
+                                                                  \
+    if (mipsdsp_cmp_##name(rs0, rt0)) {                           \
+        cond |= 0x1;                                              \
+    }                                                             \
+                                                                  \
+    set_DSPControl_24(env, cond, 2);                              \
+}
+
+CMP_PW(eq)
+CMP_PW(lt)
+CMP_PW(le)
+#endif
+
+target_ulong helper_pick_qb(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint8_t rs3, rs2, rs1, rs0;
+    uint8_t rt3, rt2, rt1, rt0;
+    uint8_t tp3, tp2, tp1, tp0;
+
+    uint32_t dsp27, dsp26, dsp25, dsp24, rd;
+    target_ulong dsp;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt0 =  rt & MIPSDSP_Q0;
+
+    dsp = env->active_tc.DSPControl;
+    dsp27 = (dsp >> 27) & 0x01;
+    dsp26 = (dsp >> 26) & 0x01;
+    dsp25 = (dsp >> 25) & 0x01;
+    dsp24 = (dsp >> 24) & 0x01;
+
+    tp3 = dsp27 == 1 ? rs3 : rt3;
+    tp2 = dsp26 == 1 ? rs2 : rt2;
+    tp1 = dsp25 == 1 ? rs1 : rt1;
+    tp0 = dsp24 == 1 ? rs0 : rt0;
+
+    rd = ((uint32_t)tp3 << 24) |
+         ((uint32_t)tp2 << 16) |
+         ((uint32_t)tp1 <<  8) |
+         (uint32_t)tp0;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_pick_ph(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl, rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t dsp25, dsp24;
+    uint32_t rd;
+    target_ulong dsp;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    dsp = env->active_tc.DSPControl;
+    dsp25 = (dsp >> 25) & 0x01;
+    dsp24 = (dsp >> 24) & 0x01;
+
+    tempB = (dsp25 == 1) ? rsh : rth;
+    tempA = (dsp24 == 1) ? rsl : rtl;
+    rd = (((uint32_t)tempB << 16) & MIPSDSP_HI) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_pick_ob(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint32_t cond;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+    cond = get_DSPControl_24(env, 8);
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+
+        temp[i] = (cond % 2) == 1 ? rs_t[i] : rt_t[i];
+        cond = cond / 2;
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_pick_qh(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t cond;
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t result;
+
+    cond = get_DSPControl_24(env, 4);
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempA = ((cond % 2) == 1) ? rs0 : rt0;
+    cond = cond / 2;
+    tempB = ((cond % 2) == 1) ? rs1 : rt1;
+    cond = cond / 2;
+    tempC = ((cond % 2) == 1) ? rs2 : rt2;
+    cond = cond / 2;
+    tempD = ((cond % 2) == 1) ? rs3 : rt3;
+
+    result = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+             ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return result;
+}
+
+target_ulong helper_pick_pw(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t cond;
+    uint32_t rs1, rs0;
+    uint32_t rt1, rt0;
+    uint32_t tempB, tempA;
+
+    cond = get_DSPControl_24(env, 2);
+    rs1 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempA = ((cond % 2) == 1) ? rs0 : rt0;
+    cond = cond / 2;
+    tempB = ((cond % 2) == 1) ? rs1 : rt1;
+
+    return ((uint64_t)tempB << 32) | (uint64_t)tempA;
+}
+#endif
+
+target_ulong helper_append(target_ulong rt, target_ulong rs, uint32_t sa)
+{
+    int len;
+    uint32_t temp;
+
+    len = sa & 0x1F;
+
+    if (len == 0) {
+        temp = rt;
+    } else {
+        temp = (rt << len) | (rs & (((uint32_t)0x01 << len) - 1));
+    }
+
+    return (target_long)(int32_t)temp;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_dappend(target_ulong rs, target_ulong rt, uint32_t sa)
+{
+    uint32_t filter;
+    uint64_t temp;
+
+    filter = 0;
+    temp = 0;
+
+    if (sa == 0) {
+        temp = rt;
+    } else {
+        filter = (0x01 << sa) - 1;
+        temp = rt << sa;
+        temp |= rs & filter;
+    }
+
+    return temp;
+}
+
+#endif
+
+target_ulong helper_prepend(uint32_t sa, target_ulong rs, target_ulong rt)
+{
+    return (target_long)(int32_t)(uint32_t)(((rs & MIPSDSP_LLO) << (32 - sa)) |\
+                                            ((rt & MIPSDSP_LLO) >> sa));
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_prependd(target_ulong rs, target_ulong rt, uint32_t sa)
+{
+    uint32_t shift;
+
+    shift = sa & 0x10;
+    shift |= 0x20;
+
+    return (rs << (64 - shift)) | (rt >> shift);
+}
+
+target_ulong helper_prependw(target_ulong rs, target_ulong rt, uint32_t sa)
+{
+    uint32_t shift;
+
+    shift = sa;
+
+    return (rs << (64 - shift)) | (rt >> shift);
+}
+#endif
+
+target_ulong helper_balign(uint32_t bp, target_ulong rt, target_ulong rs)
+{
+    bp = bp & 0x03;
+
+    if (bp == 0 || bp == 2) {
+        return rt;
+    } else {
+        return (target_long)(int32_t)((rt << (8 * bp)) | \
+                                      (rs >> (8 * (4 - bp))));
+    }
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_dbalign(target_ulong rs, target_ulong rt, uint32_t sa)
+{
+    uint8_t bp;
+
+    bp = sa & 0x07;
+
+    if ((bp == 0) || (bp == 2) || (bp == 4)) {
+        return rt;
+    } else {
+        return (rt << (8 * bp)) | (rs >> (8 * (8 - bp)));
+    }
+}
+
+#endif
+
+target_ulong helper_packrl_ph(target_ulong rs, target_ulong rt)
+{
+    uint32_t rsl, rth;
+
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+
+    return (target_long)(int32_t)((rsl << 16) | rth);
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_packrl_pw(target_ulong rs, target_ulong rt)
+{
+    uint32_t rs0, rt1;
+
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+
+    return ((uint64_t)rs0 << 32) | (uint64_t)rt1;
+}
+#endif
+
 #undef MIPSDSP_LHI
 #undef MIPSDSP_LLO
 #undef MIPSDSP_HI

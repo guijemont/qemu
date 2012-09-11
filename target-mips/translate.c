@@ -348,6 +348,11 @@ enum {
 #if defined(TARGET_MIPS64)
     OPC_DINSV_DSP      = 0x0D | OPC_SPECIAL3,
 #endif
+    /* MIPS DSP Compare-Pick Sub-class */
+    OPC_APPEND_DSP     = 0x31 | OPC_SPECIAL3,
+#if defined(TARGET_MIPS64)
+    OPC_DAPPEND_DSP    = 0x35 | OPC_SPECIAL3,
+#endif
 };
 
 /* BSHFL opcodes */
@@ -473,6 +478,22 @@ enum {
     OPC_PRECRQ_PH_W      = (0x14 << 6) | OPC_CMPU_EQ_QB_DSP,
     OPC_PRECRQ_RS_PH_W   = (0x15 << 6) | OPC_CMPU_EQ_QB_DSP,
     OPC_PRECRQU_S_QB_PH  = (0x0F << 6) | OPC_CMPU_EQ_QB_DSP,
+    /* DSP Compare-Pick Sub-class */
+    OPC_CMPU_EQ_QB       = (0x00 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPU_LT_QB       = (0x01 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPU_LE_QB       = (0x02 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGU_EQ_QB      = (0x04 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGU_LT_QB      = (0x05 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGU_LE_QB      = (0x06 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGDU_EQ_QB     = (0x18 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGDU_LT_QB     = (0x19 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMPGDU_LE_QB     = (0x1A << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMP_EQ_PH        = (0x08 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMP_LT_PH        = (0x09 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_CMP_LE_PH        = (0x0A << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_PICK_QB          = (0x03 << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_PICK_PH          = (0x0B << 6) | OPC_CMPU_EQ_QB_DSP,
+    OPC_PACKRL_PH        = (0x0E << 6) | OPC_CMPU_EQ_QB_DSP,
 };
 
 #define MASK_SHLL_QB(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
@@ -533,6 +554,14 @@ enum {
 enum {
     /* DSP Bit/Manipulation Sub-class */
     OPC_INSV = (0x00 << 6) | OPC_INSV_DSP,
+};
+
+#define MASK_APPEND(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* MIPS DSP Compare-Pick Sub-class */
+    OPC_APPEND  = (0x00 << 6) | OPC_APPEND_DSP,
+    OPC_PREPEND = (0x01 << 6) | OPC_APPEND_DSP,
+    OPC_BALIGN  = (0x10 << 6) | OPC_APPEND_DSP,
 };
 
 #if defined(TARGET_MIPS64)
@@ -603,6 +632,26 @@ enum {
 #if defined(TARGET_MIPS64)
 #define MASK_CMPU_EQ_OB(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
 enum {
+    /* DSP Compare-Pick Sub-class */
+    OPC_CMP_EQ_PW         = (0x10 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMP_LT_PW         = (0x11 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMP_LE_PW         = (0x12 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMP_EQ_QH         = (0x08 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMP_LT_QH         = (0x09 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMP_LE_QH         = (0x0A << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGDU_EQ_OB      = (0x18 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGDU_LT_OB      = (0x19 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGDU_LE_OB      = (0x1A << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGU_EQ_OB       = (0x04 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGU_LT_OB       = (0x05 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPGU_LE_OB       = (0x06 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPU_EQ_OB        = (0x00 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPU_LT_OB        = (0x01 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_CMPU_LE_OB        = (0x02 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_PACKRL_PW         = (0x0E << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_PICK_OB           = (0x03 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_PICK_PW           = (0x13 << 6) | OPC_CMPU_EQ_OB_DSP,
+    OPC_PICK_QH           = (0x0B << 6) | OPC_CMPU_EQ_OB_DSP,
     /* MIPS DSP Arithmetic Sub-class */
     OPC_PRECR_OB_QH       = (0x0D << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECR_SRA_QH_PW   = (0x1E << 6) | OPC_CMPU_EQ_OB_DSP,
@@ -612,6 +661,17 @@ enum {
     OPC_PRECRQ_QH_PW      = (0x14 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQ_RS_QH_PW   = (0x15 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQU_S_OB_QH   = (0x0F << 6) | OPC_CMPU_EQ_OB_DSP,
+};
+#endif
+
+#if defined(TARGET_MIPS64)
+#define MASK_DAPPEND(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* DSP Compare-Pick Sub-class */
+    OPC_DAPPEND  = (0x00 << 6) | OPC_DAPPEND_DSP,
+    OPC_PREPENDD = (0x03 << 6) | OPC_DAPPEND_DSP,
+    OPC_PREPENDW = (0x01 << 6) | OPC_DAPPEND_DSP,
+    OPC_DBALIGN  = (0x10 << 6) | OPC_DAPPEND_DSP,
 };
 #endif
 
@@ -12956,6 +13016,101 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 gen_helper_precrqu_s_qb_ph(cpu_gpr[rd], cpu_env,
                                            cpu_gpr[rs], cpu_gpr[rt]);
                 break;
+            case OPC_CMPU_EQ_QB:
+                check_dsp(ctx);
+                gen_helper_cmpu_eq_qb(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPU_LT_QB:
+                check_dsp(ctx);
+                gen_helper_cmpu_lt_qb(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPU_LE_QB:
+                check_dsp(ctx);
+                gen_helper_cmpu_le_qb(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_EQ_QB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_eq_qb(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_LT_QB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_lt_qb(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_LE_QB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_le_qb(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGDU_EQ_QB:
+                check_dspr2(ctx);
+                {
+                    TCGv dspc, t0;
+                    dspc = tcg_const_tl(0);
+                    t0 = tcg_const_tl(0);
+                    gen_helper_cmpgu_eq_qb(dspc, cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_gen_mov_tl(cpu_gpr[rd], dspc);
+                    tcg_gen_andi_tl(cpu_dspctrl, cpu_dspctrl, 0xF0FFFFFF);
+                    tcg_gen_shli_tl(t0, dspc, 24);
+                    tcg_gen_or_tl(cpu_dspctrl, cpu_dspctrl, t0);
+                    tcg_temp_free(dspc);
+                    tcg_temp_free(t0);
+                    break;
+                }
+            case OPC_CMPGDU_LT_QB:
+                check_dspr2(ctx);
+                {
+                    TCGv dspc, t0;
+                    dspc = tcg_const_tl(0);
+                    t0 = tcg_const_tl(0);
+                    gen_helper_cmpgu_lt_qb(dspc, cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_gen_mov_tl(cpu_gpr[rd], dspc);
+                    tcg_gen_andi_tl(cpu_dspctrl, cpu_dspctrl, 0xF0FFFFFF);
+                    tcg_gen_shli_tl(t0, dspc, 24);
+                    tcg_gen_or_tl(cpu_dspctrl, cpu_dspctrl, t0);
+                    tcg_temp_free(dspc);
+                    tcg_temp_free(t0);
+                    break;
+                }
+            case OPC_CMPGDU_LE_QB:
+                check_dspr2(ctx);
+                {
+                    TCGv dspc, t0;
+                    dspc = tcg_const_tl(0);
+                    t0 = tcg_const_tl(0);
+                    gen_helper_cmpgu_le_qb(dspc, cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_gen_mov_tl(cpu_gpr[rd], dspc);
+                    tcg_gen_andi_tl(cpu_dspctrl, cpu_dspctrl, 0xF0FFFFFF);
+                    tcg_gen_shli_tl(t0, dspc, 24);
+                    tcg_gen_or_tl(cpu_dspctrl, cpu_dspctrl, t0);
+                    tcg_temp_free(dspc);
+                    tcg_temp_free(t0);
+                    break;
+                }
+            case OPC_CMP_EQ_PH:
+                check_dsp(ctx);
+                gen_helper_cmp_eq_ph(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LT_PH:
+                check_dsp(ctx);
+                gen_helper_cmp_lt_ph(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LE_PH:
+                check_dsp(ctx);
+                gen_helper_cmp_le_ph(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PICK_QB:
+                check_dsp(ctx);
+                gen_helper_pick_qb(cpu_gpr[rd], cpu_env,
+                                   cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PICK_PH:
+                check_dsp(ctx);
+                gen_helper_pick_ph(cpu_gpr[rd], cpu_env,
+                                   cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PACKRL_PH:
+                check_dsp(ctx);
+                gen_helper_packrl_ph(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
+                break;
             default:            /* Invalid */
                 MIPS_INVAL("MASK CMPU.EQ.QB");
                 generate_exception(ctx, EXCP_RI);
@@ -13296,6 +13451,40 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 break;
             }
             break;
+        case OPC_APPEND_DSP:
+            check_dspr2(ctx);
+            op2 = MASK_APPEND(ctx->opcode);
+            switch (op2) {
+            case OPC_APPEND:
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_append(cpu_gpr[rt], cpu_gpr[rt],
+                                      cpu_gpr[rs], temp_rd);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_PREPEND:
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_prepend(cpu_gpr[rt], temp_rd,
+                                       cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_BALIGN:
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_balign(cpu_gpr[rt], temp_rd,
+                                      cpu_gpr[rt], cpu_gpr[rs]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            default:            /* Invalid */
+                MIPS_INVAL("MASK APPEND");
+                generate_exception(ctx, EXCP_RI);
+                break;
+            }
+            break;
 #if defined(TARGET_MIPS64)
         case OPC_DEXTM ... OPC_DEXT:
         case OPC_DINSM ... OPC_DINS:
@@ -13441,7 +13630,7 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                     break;
                 }
             case OPC_REPLV_PW:
-                check_insn(env, ctx, ASE_DSP);
+                check_dsp(ctx);
                 {
                     TCGv imm_v;
                     imm_v = tcg_temp_new();
@@ -13453,7 +13642,7 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                     break;
                 }
             case OPC_REPLV_QH:
-                check_insn(env, ctx, ASE_DSP);
+                check_dsp(ctx);
                 {
                     TCGv imm_v;
                     TCGv temp_rd;
@@ -13630,6 +13819,91 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
         case OPC_CMPU_EQ_OB_DSP:
             op2 = MASK_CMPU_EQ_OB(ctx->opcode);
             switch (op2) {
+            case OPC_CMP_EQ_PW:
+                check_dsp(ctx);
+                gen_helper_cmp_eq_pw(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LT_PW:
+                check_dsp(ctx);
+                gen_helper_cmp_lt_pw(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LE_PW:
+                check_dsp(ctx);
+                gen_helper_cmp_le_pw(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_EQ_QH:
+                check_dsp(ctx);
+                gen_helper_cmp_eq_qh(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LT_QH:
+                check_dsp(ctx);
+                gen_helper_cmp_lt_qh(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMP_LE_QH:
+                check_dsp(ctx);
+                gen_helper_cmp_le_qh(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGDU_EQ_OB:
+                check_dspr2(ctx);
+                gen_helper_cmpgdu_eq_ob(cpu_gpr[rd], cpu_env,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGDU_LT_OB:
+                check_dspr2(ctx);
+                gen_helper_cmpgdu_lt_ob(cpu_gpr[rd], cpu_env,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGDU_LE_OB:
+                check_dspr2(ctx);
+                gen_helper_cmpgdu_le_ob(cpu_gpr[rd], cpu_env,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_EQ_OB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_eq_ob(cpu_gpr[rd], cpu_gpr[rs],
+                                       cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_LT_OB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_lt_ob(cpu_gpr[rd], cpu_gpr[rs],
+                                       cpu_gpr[rt]);
+                break;
+            case OPC_CMPGU_LE_OB:
+                check_dsp(ctx);
+                gen_helper_cmpgu_le_ob(cpu_gpr[rd], cpu_gpr[rs],
+                                       cpu_gpr[rt]);
+                break;
+            case OPC_CMPU_EQ_OB:
+                check_dsp(ctx);
+                gen_helper_cmpu_eq_ob(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPU_LT_OB:
+                check_dsp(ctx);
+                gen_helper_cmpu_lt_ob(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_CMPU_LE_OB:
+                check_dsp(ctx);
+                gen_helper_cmpu_le_ob(cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PACKRL_PW:
+                check_dsp(ctx);
+                gen_helper_packrl_pw(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PICK_OB:
+                check_dsp(ctx);
+                gen_helper_pick_ob(cpu_gpr[rd], cpu_env,
+                                   cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PICK_PW:
+                check_dsp(ctx);
+                gen_helper_pick_pw(cpu_gpr[rd], cpu_env,
+                                   cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_PICK_QH:
+                check_dsp(ctx);
+                gen_helper_pick_qh(cpu_gpr[rd], cpu_env,
+                                   cpu_gpr[rs], cpu_gpr[rt]);
+                break;
             case OPC_PRECR_OB_QH:
                 check_dspr2(ctx);
                 gen_helper_precr_ob_qh(cpu_gpr[rd], cpu_gpr[rs],
@@ -13680,6 +13954,50 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 break;
             default:            /* Invalid */
                 MIPS_INVAL("MASK CMPU.EQ.OB");
+                generate_exception(ctx, EXCP_RI);
+                break;
+            }
+            break;
+#endif
+#if defined(TARGET_MIPS64)
+        case OPC_DAPPEND_DSP:
+            check_dspr2(ctx);
+            op2 = MASK_DAPPEND(ctx->opcode);
+            switch (op2) {
+            case OPC_DAPPEND:
+                {
+                    TCGv_i32 sa_v = tcg_const_i32(rd);
+                    gen_helper_dappend(cpu_gpr[rt], cpu_gpr[rs],
+                                       cpu_gpr[rt], sa_v);
+                    tcg_temp_free_i32(sa_v);
+                    break;
+                }
+            case OPC_PREPENDD:
+                {
+                    TCGv_i32 sa_v = tcg_const_i32(rd);
+                    gen_helper_prependd(cpu_gpr[rt], cpu_gpr[rs],
+                                        cpu_gpr[rt], sa_v);
+                    tcg_temp_free_i32(sa_v);
+                    break;
+                }
+            case OPC_PREPENDW:
+                {
+                    TCGv_i32 sa_v = tcg_const_i32(rd);
+                    gen_helper_prependw(cpu_gpr[rt], cpu_gpr[rs],
+                                        cpu_gpr[rt], sa_v);
+                    tcg_temp_free_i32(sa_v);
+                    break;
+                }
+            case OPC_DBALIGN:
+                {
+                  TCGv_i32 sa_v = tcg_const_i32(rd);
+                  gen_helper_dbalign(cpu_gpr[rt], cpu_gpr[rs],
+                                     cpu_gpr[rt], sa_v);
+                  tcg_temp_free_i32(sa_v);
+                  break;
+                }
+            default:            /* Invalid */
+                MIPS_INVAL("MASK DAPPEND");
                 generate_exception(ctx, EXCP_RI);
                 break;
             }
