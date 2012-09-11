@@ -402,6 +402,13 @@ enum {
     OPC_ADDWC          = (0x11 << 6) | OPC_ADDU_QB_DSP,
     OPC_MODSUB         = (0x12 << 6) | OPC_ADDU_QB_DSP,
     OPC_RADDU_W_QB     = (0x14 << 6) | OPC_ADDU_QB_DSP,
+    /* MIPS DSP Multiply Sub-class insns */
+    OPC_MULEU_S_PH_QBL = (0x06 << 6) | OPC_ADDU_QB_DSP,
+    OPC_MULEU_S_PH_QBR = (0x07 << 6) | OPC_ADDU_QB_DSP,
+    OPC_MULQ_RS_PH     = (0x1F << 6) | OPC_ADDU_QB_DSP,
+    OPC_MULEQ_S_W_PHL  = (0x1C << 6) | OPC_ADDU_QB_DSP,
+    OPC_MULEQ_S_W_PHR  = (0x1D << 6) | OPC_ADDU_QB_DSP,
+    OPC_MULQ_S_PH      = (0x1E << 6) | OPC_ADDU_QB_DSP,
 };
 
 #define OPC_ADDUH_QB_DSP OPC_MULT_G_2E
@@ -420,6 +427,11 @@ enum {
     OPC_SUBQH_R_PH = (0x0B << 6) | OPC_ADDUH_QB_DSP,
     OPC_SUBQH_W    = (0x11 << 6) | OPC_ADDUH_QB_DSP,
     OPC_SUBQH_R_W  = (0x13 << 6) | OPC_ADDUH_QB_DSP,
+    /* MIPS DSP Multiply Sub-class insns */
+    OPC_MUL_PH     = (0x0C << 6) | OPC_ADDUH_QB_DSP,
+    OPC_MUL_S_PH   = (0x0E << 6) | OPC_ADDUH_QB_DSP,
+    OPC_MULQ_S_W   = (0x16 << 6) | OPC_ADDUH_QB_DSP,
+    OPC_MULQ_RS_W  = (0x17 << 6) | OPC_ADDUH_QB_DSP,
 };
 
 #define MASK_ABSQ_S_PH(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
@@ -451,6 +463,7 @@ enum {
     OPC_PRECRQ_RS_PH_W   = (0x15 << 6) | OPC_CMPU_EQ_QB_DSP,
     OPC_PRECRQU_S_QB_PH  = (0x0F << 6) | OPC_CMPU_EQ_QB_DSP,
 };
+
 #define MASK_SHLL_QB(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
 enum {
     /* MIPS DSP GPR-Based Shift Sub-class */
@@ -476,6 +489,33 @@ enum {
     OPC_SHRAV_R_PH = (0x0F << 6) | OPC_SHLL_QB_DSP,
     OPC_SHRA_R_W   = (0x15 << 6) | OPC_SHLL_QB_DSP,
     OPC_SHRAV_R_W  = (0x17 << 6) | OPC_SHLL_QB_DSP,
+};
+
+#define MASK_DPA_W_PH(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* MIPS DSP Multiply Sub-class insns */
+    OPC_DPAU_H_QBL    = (0x03 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAU_H_QBR    = (0x07 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSU_H_QBL    = (0x0B << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSU_H_QBR    = (0x0F << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPA_W_PH      = (0x00 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAX_W_PH     = (0x08 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAQ_S_W_PH   = (0x04 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAQX_S_W_PH  = (0x18 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAQX_SA_W_PH = (0x1A << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPS_W_PH      = (0x01 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSX_W_PH          = (0x09 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSQ_S_W_PH   = (0x05 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSQX_S_W_PH  = (0x19 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSQX_SA_W_PH = (0x1B << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MULSAQ_S_W_PH = (0x06 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPAQ_SA_L_W   = (0x0C << 6) | OPC_DPA_W_PH_DSP,
+    OPC_DPSQ_SA_L_W   = (0x0D << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MAQ_S_W_PHL   = (0x14 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MAQ_S_W_PHR   = (0x16 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MAQ_SA_W_PHL  = (0x10 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MAQ_SA_W_PHR  = (0x12 << 6) | OPC_DPA_W_PH_DSP,
+    OPC_MULSA_W_PH    = (0x02 << 6) | OPC_DPA_W_PH_DSP,
 };
 
 #if defined(TARGET_MIPS64)
@@ -505,6 +545,12 @@ enum {
 #if defined(TARGET_MIPS64)
 #define MASK_ADDU_OB(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
 enum {
+    /* MIPS DSP Multiply Sub-class insns */
+    OPC_MULEQ_S_PW_QHL = (0x1C << 6) | OPC_ADDU_OB_DSP,
+    OPC_MULEQ_S_PW_QHR = (0x1D << 6) | OPC_ADDU_OB_DSP,
+    OPC_MULEU_S_QH_OBL = (0x06 << 6) | OPC_ADDU_OB_DSP,
+    OPC_MULEU_S_QH_OBR = (0x07 << 6) | OPC_ADDU_OB_DSP,
+    OPC_MULQ_RS_QH     = (0x1F << 6) | OPC_ADDU_OB_DSP,
     /* MIPS DSP Arithmetic Sub-class */
     OPC_RADDU_L_OB     = (0x14 << 6) | OPC_ADDU_OB_DSP,
     OPC_SUBQ_PW        = (0x13 << 6) | OPC_ADDU_OB_DSP,
@@ -542,6 +588,39 @@ enum {
     OPC_PRECRQ_QH_PW      = (0x14 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQ_RS_QH_PW   = (0x15 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQU_S_OB_QH   = (0x0F << 6) | OPC_CMPU_EQ_OB_DSP,
+};
+#endif
+
+#if defined(TARGET_MIPS64)
+#define MASK_DPAQ_W_QH(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* MIPS DSP Multiply Sub-class insns */
+    OPC_DMADD         = (0x19 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DMADDU        = (0x1D << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DMSUB         = (0x1B << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DMSUBU        = (0x1F << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPA_W_QH      = (0x00 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPAQ_S_W_QH   = (0x04 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPAQ_SA_L_PW  = (0x0C << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPAU_H_OBL    = (0x03 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPAU_H_OBR    = (0x07 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPS_W_QH      = (0x01 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPSQ_S_W_QH   = (0x05 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPSQ_SA_L_PW  = (0x0D << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPSU_H_OBL    = (0x0B << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_DPSU_H_OBR    = (0x0F << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_L_PWL   = (0x1C << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_L_PWR   = (0x1E << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_W_QHLL  = (0x14 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_SA_W_QHLL = (0x10 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_W_QHLR  = (0x15 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_SA_W_QHLR = (0x11 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_W_QHRL  = (0x16 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_SA_W_QHRL = (0x12 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_S_W_QHRR  = (0x17 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MAQ_SA_W_QHRR = (0x13 << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MULSAQ_S_L_PW = (0x0E << 6) | OPC_DPAQ_W_QH_DSP,
+    OPC_MULSAQ_S_W_QH = (0x06 << 6) | OPC_DPAQ_W_QH_DSP,
 };
 #endif
 
@@ -12455,6 +12534,22 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 case OPC_SUBQH_R_W:
                     gen_helper_subqh_r_w(cpu_gpr[rd], cpu_gpr[rs], cpu_gpr[rt]);
                     break;
+                case  OPC_MUL_PH:
+                    gen_helper_mul_ph(cpu_gpr[rd], cpu_env,
+                                      cpu_gpr[rs], cpu_gpr[rt]);
+                    break;
+                case  OPC_MUL_S_PH:
+                    gen_helper_mul_s_ph(cpu_gpr[rd], cpu_env,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                    break;
+                case OPC_MULQ_S_W:
+                    gen_helper_mulq_s_w(cpu_gpr[rd], cpu_env,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                    break;
+                case OPC_MULQ_RS_W:
+                    gen_helper_mulq_rs_w(cpu_gpr[rd], cpu_env,
+                                         cpu_gpr[rs], cpu_gpr[rt]);
+                    break;
                 default:
                     MIPS_INVAL("MASK ADDUH.QB");
                     generate_exception(ctx, EXCP_RI);
@@ -12681,6 +12776,36 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 check_dsp(ctx);
                 gen_helper_raddu_w_qb(cpu_gpr[rd], cpu_gpr[rs]);
                 break;
+            case OPC_MULEU_S_PH_QBL:
+                check_dsp(ctx);
+                gen_helper_muleu_s_ph_qbl(cpu_gpr[rd], cpu_env,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEU_S_PH_QBR:
+                check_dsp(ctx);
+                gen_helper_muleu_s_ph_qbr(cpu_gpr[rd], cpu_env,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULQ_RS_PH:
+                check_dsp(ctx);
+                gen_helper_mulq_rs_ph(cpu_gpr[rd], cpu_env,
+                                      cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEQ_S_W_PHL:
+                check_dsp(ctx);
+                gen_helper_muleq_s_w_phl(cpu_gpr[rd], cpu_env,
+                                         cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEQ_S_W_PHR:
+                check_dsp(ctx);
+                gen_helper_muleq_s_w_phr(cpu_gpr[rd], cpu_env,
+                                         cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULQ_S_PH:
+                check_dspr2(ctx);
+                gen_helper_mulq_s_ph(cpu_gpr[rd], cpu_env,
+                                     cpu_gpr[rs], cpu_gpr[rt]);
+                break;
             default:            /* Invalid */
                 MIPS_INVAL("MASK ADDU.QB");
                 generate_exception(ctx, EXCP_RI);
@@ -12847,6 +12972,213 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 tcg_temp_free_i32(temp_rs);
                 break;
             }
+        case OPC_DPA_W_PH_DSP:
+            op2 = MASK_DPA_W_PH(ctx->opcode);
+            switch (op2) {
+            case OPC_DPAU_H_QBL:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpau_h_qbl(cpu_env, temp_rd,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAU_H_QBR:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpau_h_qbr(cpu_env, temp_rd,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSU_H_QBL:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsu_h_qbl(cpu_env, temp_rd,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSU_H_QBR:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsu_h_qbr(cpu_env, temp_rd,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPA_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpa_w_ph(cpu_env, temp_rd,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAX_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpax_w_ph(cpu_env, temp_rd,
+                                         cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAQ_S_W_PH:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpaq_s_w_ph(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAQX_S_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpaqx_s_w_ph(cpu_env, temp_rd,
+                                            cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAQX_SA_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpaqx_sa_w_ph(cpu_env, temp_rd,
+                                             cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPS_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dps_w_ph(cpu_env, temp_rd,
+                                        cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSX_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsx_w_ph(cpu_env, temp_rd,
+                                         cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSQ_S_W_PH:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsq_s_w_ph(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSQX_S_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsqx_s_w_ph(cpu_env, temp_rd,
+                                            cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSQX_SA_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsqx_sa_w_ph(cpu_env, temp_rd,
+                                             cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MULSAQ_S_W_PH:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_mulsaq_s_w_ph(cpu_env, temp_rd,
+                                             cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPAQ_SA_L_W:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpaq_sa_l_w(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_DPSQ_SA_L_W:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_dpsq_sa_l_w(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MAQ_S_W_PHL:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_maq_s_w_phl(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MAQ_S_W_PHR:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_maq_s_w_phr(cpu_env, temp_rd,
+                                           cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MAQ_SA_W_PHL:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_maq_sa_w_phl(cpu_env, temp_rd,
+                                            cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MAQ_SA_W_PHR:
+                check_dsp(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_maq_sa_w_phr(cpu_env, temp_rd,
+                                            cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            case OPC_MULSA_W_PH:
+                check_dspr2(ctx);
+                {
+                    TCGv_i32 temp_rd = tcg_const_i32(rd);
+                    gen_helper_mulsa_w_ph(cpu_env, temp_rd,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                    tcg_temp_free_i32(temp_rd);
+                    break;
+                }
+            default:            /* Invalid */
+                MIPS_INVAL("MASK DPAW.PH");
+                generate_exception(ctx, EXCP_RI);
+                break;
+            }
+            break;
 #if defined(TARGET_MIPS64)
         case OPC_DEXTM ... OPC_DEXT:
         case OPC_DINSM ... OPC_DINS:
@@ -12951,6 +13283,31 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
         case OPC_ADDU_OB_DSP:
             op2 = MASK_ADDU_OB(ctx->opcode);
             switch (op2) {
+            case OPC_MULEQ_S_PW_QHL:
+                check_dsp(ctx);
+                gen_helper_muleq_s_pw_qhl(cpu_gpr[rd], cpu_env,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEQ_S_PW_QHR:
+                check_dsp(ctx);
+                gen_helper_muleq_s_pw_qhr(cpu_gpr[rd], cpu_env,
+                                          cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEU_S_QH_OBL:
+                check_dsp(ctx);
+                gen_helper_muleu_s_qh_obl(cpu_gpr[rd],
+                                          cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULEU_S_QH_OBR:
+                check_dsp(ctx);
+                gen_helper_muleu_s_qh_obr(cpu_gpr[rd],
+                                          cpu_env, cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            case OPC_MULQ_RS_QH:
+                check_dsp(ctx);
+                gen_helper_mulq_rs_qh(cpu_gpr[rd], cpu_env,
+                                      cpu_gpr[rs], cpu_gpr[rt]);
+                break;
             case OPC_RADDU_L_OB:
                 check_dsp(ctx);
                 gen_helper_raddu_l_ob(cpu_gpr[rd], cpu_gpr[rs]);
@@ -13116,6 +13473,152 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 break;
             }
             break;
+#endif
+#if defined(TARGET_MIPS64)
+        case OPC_DPAQ_W_QH_DSP:
+            {
+                int ac = rd & 0x03;
+                TCGv_i32 ac_v = tcg_const_i32(ac);
+
+                op2 = MASK_DPAQ_W_QH(ctx->opcode);
+
+                switch (op2) {
+                case OPC_DMADD:
+                    check_dsp(ctx);
+                    gen_helper_dmadd(cpu_env, cpu_gpr[rs], cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DMADDU:
+                    check_dsp(ctx);
+                    gen_helper_dmaddu(cpu_env, cpu_gpr[rs],
+                                      cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DMSUB:
+                    check_dsp(ctx);
+                    gen_helper_dmsub(cpu_env, cpu_gpr[rs], cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DMSUBU:
+                    check_dsp(ctx);
+                    gen_helper_dmsubu(cpu_env, cpu_gpr[rs],
+                                      cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPA_W_QH:
+                    check_dspr2(ctx);
+                    gen_helper_dpa_w_qh(cpu_env, cpu_gpr[rs],
+                                        cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPAQ_S_W_QH:
+                    check_dsp(ctx);
+                    gen_helper_dpaq_s_w_qh(cpu_env, cpu_gpr[rs],
+                                           cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPAQ_SA_L_PW:
+                    check_dsp(ctx);
+                    gen_helper_dpaq_sa_l_pw(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPAU_H_OBL:
+                    check_dsp(ctx);
+                    gen_helper_dpau_h_obl(cpu_env, cpu_gpr[rs],
+                                          cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPAU_H_OBR:
+                    check_dsp(ctx);
+                    gen_helper_dpau_h_obr(cpu_env, cpu_gpr[rs],
+                                          cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPS_W_QH:
+                    check_dspr2(ctx);
+                    gen_helper_dps_w_qh(cpu_env, cpu_gpr[rs],
+                                        cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPSQ_S_W_QH:
+                    check_dsp(ctx);
+                    gen_helper_dpsq_s_w_qh(cpu_env, cpu_gpr[rs],
+                                           cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPSQ_SA_L_PW:
+                    check_dsp(ctx);
+                    gen_helper_dpsq_sa_l_pw(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPSU_H_OBL:
+                    check_dsp(ctx);
+                    gen_helper_dpsu_h_obl(cpu_env, cpu_gpr[rs],
+                                          cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_DPSU_H_OBR:
+                    check_dsp(ctx);
+                    gen_helper_dpsu_h_obr(cpu_env, cpu_gpr[rs],
+                                          cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_L_PWL:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_l_pwl(cpu_env, cpu_gpr[rs],
+                                           cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_L_PWR:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_l_pwr(cpu_env, cpu_gpr[rs],
+                                           cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_W_QHLL:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_w_qhll(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_SA_W_QHLL:
+                    check_dsp(ctx);
+                    gen_helper_maq_sa_w_qhll(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_W_QHLR:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_w_qhlr(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_SA_W_QHLR:
+                    check_dsp(ctx);
+                    gen_helper_maq_sa_w_qhlr(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_W_QHRL:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_w_qhrl(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_SA_W_QHRL:
+                    check_dsp(ctx);
+                    gen_helper_maq_sa_w_qhrl(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_S_W_QHRR:
+                    check_dsp(ctx);
+                    gen_helper_maq_s_w_qhrr(cpu_env, cpu_gpr[rs],
+                                            cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MAQ_SA_W_QHRR:
+                    check_dsp(ctx);
+                    gen_helper_maq_sa_w_qhrr(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MULSAQ_S_L_PW:
+                    check_dsp(ctx);
+                    gen_helper_mulsaq_s_l_pw(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                case OPC_MULSAQ_S_W_QH:
+                    check_dsp(ctx);
+                    gen_helper_mulsaq_s_w_qh(cpu_env, cpu_gpr[rs],
+                                             cpu_gpr[rt], ac_v);
+                    break;
+                default:            /* Invalid */
+                    MIPS_INVAL("MASK DPAQ.W.QH");
+                    generate_exception(ctx, EXCP_RI);
+                    break;
+                }
+                tcg_temp_free_i32(ac_v);
+                break;
+            }
 #endif
 #if defined(TARGET_MIPS64)
         case OPC_SHLL_OB_DSP:
