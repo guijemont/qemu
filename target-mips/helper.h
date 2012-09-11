@@ -635,4 +635,56 @@ DEF_HELPER_FLAGS_2(packrl_ph, TCG_CALL_CONST | TCG_CALL_PURE, tl, tl, tl)
 DEF_HELPER_FLAGS_2(packrl_pw, TCG_CALL_CONST | TCG_CALL_PURE, tl, tl, tl)
 #endif
 
+/* DSP Accumulator and DSPControl Access Sub-class insns */
+DEF_HELPER_FLAGS_3(extr_w, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(extr_r_w, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(extr_rs_w, 0, tl, env, i32, i32)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dextr_w, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextr_r_w, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextr_rs_w, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextr_l, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextr_r_l, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextr_rs_l, 0, tl, env, i32, i32)
+#endif
+DEF_HELPER_FLAGS_3(extr_s_h, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(extrv_s_h, 0, tl, env, i32, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dextr_s_h, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextrv_s_h, 0, tl, env, i32, tl)
+#endif
+DEF_HELPER_FLAGS_3(extrv_w, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(extrv_r_w, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(extrv_rs_w, 0, tl, env, i32, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dextrv_w, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextrv_r_w, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextrv_rs_w, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextrv_l, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextrv_r_l, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextrv_rs_l, 0, tl, env, i32, tl)
+#endif
+DEF_HELPER_FLAGS_3(extp, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(extpv, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(extpdp, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(extpdpv, 0, tl, env, i32, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dextp, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextpv, 0, tl, env, i32, tl)
+DEF_HELPER_FLAGS_3(dextpdp, 0, tl, env, i32, i32)
+DEF_HELPER_FLAGS_3(dextpdpv, 0, tl, env, i32, tl)
+#endif
+DEF_HELPER_FLAGS_3(shilo, 0, void, env, i32, i32)
+DEF_HELPER_FLAGS_3(shilov, 0, void, env, i32, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dshilo, 0, void, env, i32, i32)
+DEF_HELPER_FLAGS_3(dshilov, 0, void, env, tl, i32)
+#endif
+DEF_HELPER_FLAGS_3(mthlip, 0, void, env, i32, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dmthlip, 0, void, env, tl, i32)
+#endif
+DEF_HELPER_FLAGS_3(wrdsp, 0, void, env, tl, i32)
+DEF_HELPER_FLAGS_2(rddsp, 0, tl, env, i32)
+
 #include "def-helper.h"
