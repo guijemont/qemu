@@ -1098,3 +1098,1836 @@ static inline int32_t mipsdsp_cmp_lt(uint32_t a, uint32_t b)
     return a < b;
 }
 /*** MIPS DSP internal functions end ***/
+
+#define MIPSDSP_LHI 0xFFFFFFFF00000000ull
+#define MIPSDSP_LLO 0x00000000FFFFFFFFull
+#define MIPSDSP_HI  0xFFFF0000
+#define MIPSDSP_LO  0x0000FFFF
+#define MIPSDSP_Q3  0xFF000000
+#define MIPSDSP_Q2  0x00FF0000
+#define MIPSDSP_Q1  0x0000FF00
+#define MIPSDSP_Q0  0x000000FF
+
+/** DSP Arithmetic Sub-class insns **/
+target_ulong helper_addq_ph(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    int16_t  rsh, rsl, rth, rtl, temph, templ;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    temph = mipsdsp_add_i16(env, rsh, rth);
+    templ = mipsdsp_add_i16(env, rsl, rtl);
+
+    return (target_long)(int32_t)(((unsigned int)temph << 16) \
+                                  | ((unsigned int)templ & 0xFFFF));
+}
+
+target_ulong helper_addq_s_ph(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    int16_t rsh, rsl, rth, rtl, temph, templ;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    temph = mipsdsp_sat_add_i16(env, rsh, rth);
+    templ = mipsdsp_sat_add_i16(env, rsl, rtl);
+
+    return (target_long)(int32_t)(((uint32_t)temph << 16) \
+                                  | ((uint32_t)templ & 0xFFFF));
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_addq_qh(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_add_i16(env, rs3, rt3);
+    tempC = mipsdsp_add_i16(env, rs2, rt2);
+    tempB = mipsdsp_add_i16(env, rs1, rt1);
+    tempA = mipsdsp_add_i16(env, rs0, rt0);
+
+    return ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+        ((uint64_t)tempB << 16) | (uint64_t)tempA;
+}
+
+target_ulong helper_addq_s_qh(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sat_add_i16(env, rs3, rt3);
+    tempC = mipsdsp_sat_add_i16(env, rs2, rt2);
+    tempB = mipsdsp_sat_add_i16(env, rs1, rt1);
+    tempA = mipsdsp_sat_add_i16(env, rs0, rt0);
+
+    return ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+        ((uint64_t)tempB << 16) | (uint64_t)tempA;
+}
+#endif
+
+target_ulong helper_addq_s_w(CPUMIPSState *env,
+                             target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    rd = mipsdsp_sat_add_i32(env, rs, rt);
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_addq_pw(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t rs1, rs0;
+    uint32_t rt1, rt0;
+    uint32_t tempB, tempA;
+
+    rs1 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempB = mipsdsp_add_i32(env, rs1, rt1);
+    tempA = mipsdsp_add_i32(env, rs0, rt0);
+
+    return ((uint64_t)tempB << 32) | (uint64_t)tempA;
+}
+
+target_ulong helper_addq_s_pw(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint32_t rs1, rs0;
+    uint32_t rt1, rt0;
+    uint32_t tempB, tempA;
+
+    rs1 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempB = mipsdsp_sat_add_i32(env, rs1, rt1);
+    tempA = mipsdsp_sat_add_i32(env, rs0, rt0);
+
+    return ((uint64_t)tempB << 32) | (uint64_t)tempA;
+}
+#endif
+
+target_ulong helper_addu_qb(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    uint8_t  rs0, rs1, rs2, rs3;
+    uint8_t  rt0, rt1, rt2, rt3;
+    uint8_t  temp0, temp1, temp2, temp3;
+
+    rs0 =  rs & MIPSDSP_Q0;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+
+    rt0 =  rt & MIPSDSP_Q0;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+
+    temp0 = mipsdsp_add_u8(env, rs0, rt0);
+    temp1 = mipsdsp_add_u8(env, rs1, rt1);
+    temp2 = mipsdsp_add_u8(env, rs2, rt2);
+    temp3 = mipsdsp_add_u8(env, rs3, rt3);
+
+    rd = (((uint32_t)temp3 << 24) & MIPSDSP_Q3) |
+         (((uint32_t)temp2 << 16) & MIPSDSP_Q2) |
+         (((uint32_t)temp1 <<  8) & MIPSDSP_Q1) |
+         ((uint32_t)temp0         & MIPSDSP_Q0);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addu_s_qb(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    uint8_t rs0, rs1, rs2, rs3;
+    uint8_t rt0, rt1, rt2, rt3;
+    uint8_t temp0, temp1, temp2, temp3;
+
+    rs0 =  rs & MIPSDSP_Q0;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+
+    rt0 =  rt & MIPSDSP_Q0;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+
+    temp0 = mipsdsp_sat_add_u8(env, rs0, rt0);
+    temp1 = mipsdsp_sat_add_u8(env, rs1, rt1);
+    temp2 = mipsdsp_sat_add_u8(env, rs2, rt2);
+    temp3 = mipsdsp_sat_add_u8(env, rs3, rt3);
+
+    rd = (((uint8_t)temp3 << 24) & MIPSDSP_Q3) |
+         (((uint8_t)temp2 << 16) & MIPSDSP_Q2) |
+         (((uint8_t)temp1 <<  8) & MIPSDSP_Q1) |
+         ((uint8_t)temp0         & MIPSDSP_Q0);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_adduh_qb(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    uint8_t  rs0, rs1, rs2, rs3;
+    uint8_t  rt0, rt1, rt2, rt3;
+    uint8_t  temp0, temp1, temp2, temp3;
+
+    rs0 =  rs & MIPSDSP_Q0;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+
+    rt0 =  rt & MIPSDSP_Q0;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+
+    temp0 = mipsdsp_rshift1_add_u8(rs0, rt0);
+    temp1 = mipsdsp_rshift1_add_u8(rs1, rt1);
+    temp2 = mipsdsp_rshift1_add_u8(rs2, rt2);
+    temp3 = mipsdsp_rshift1_add_u8(rs3, rt3);
+
+    rd = (((uint32_t)temp3 << 24) & MIPSDSP_Q3) |
+         (((uint32_t)temp2 << 16) & MIPSDSP_Q2) |
+         (((uint32_t)temp1 <<  8) & MIPSDSP_Q1) |
+         ((uint32_t)temp0         & MIPSDSP_Q0);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_adduh_r_qb(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    uint8_t  rs0, rs1, rs2, rs3;
+    uint8_t  rt0, rt1, rt2, rt3;
+    uint8_t  temp0, temp1, temp2, temp3;
+
+    rs0 =  rs & MIPSDSP_Q0;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+
+    rt0 =  rt & MIPSDSP_Q0;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+
+    temp0 = mipsdsp_rrshift1_add_u8(rs0, rt0);
+    temp1 = mipsdsp_rrshift1_add_u8(rs1, rt1);
+    temp2 = mipsdsp_rrshift1_add_u8(rs2, rt2);
+    temp3 = mipsdsp_rrshift1_add_u8(rs3, rt3);
+
+    rd = (((uint32_t)temp3 << 24) & MIPSDSP_Q3) |
+         (((uint32_t)temp2 << 16) & MIPSDSP_Q2) |
+         (((uint32_t)temp1 <<  8) & MIPSDSP_Q1) |
+         ((uint32_t)temp0         & MIPSDSP_Q0);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addu_ph(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl, rth, rtl, temph, templ;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+    temph = mipsdsp_add_u16(env, rsh, rth);
+    templ = mipsdsp_add_u16(env, rsl, rtl);
+    rd = ((uint32_t)temph << 16) | ((uint32_t)templ & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addu_s_ph(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl, rth, rtl, temph, templ;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+    temph = mipsdsp_sat_add_u16(env, rsh, rth);
+    templ = mipsdsp_sat_add_u16(env, rsl, rtl);
+    rd = ((uint32_t)temph << 16) | ((uint32_t)templ & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addqh_ph(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    int16_t rsh, rsl, rth, rtl, temph, templ;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    temph = mipsdsp_rshift1_add_q16(rsh, rth);
+    templ = mipsdsp_rshift1_add_q16(rsl, rtl);
+    rd = ((uint32_t)temph << 16) | ((uint32_t)templ & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addqh_r_ph(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    int16_t rsh, rsl, rth, rtl, temph, templ;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    temph = mipsdsp_rrshift1_add_q16(rsh, rth);
+    templ = mipsdsp_rrshift1_add_q16(rsl, rtl);
+    rd = ((uint32_t)temph << 16) | ((uint32_t)templ & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addqh_w(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+
+    rd = mipsdsp_rshift1_add_q32(rs, rt);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_addqh_r_w(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+
+    rd = mipsdsp_rrshift1_add_q32(rs, rt);
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_addu_ob(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_add_u8(env, rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_addu_s_ob(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_sat_add_u8(env, rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_adduh_ob(target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_rshift1_add_u8(rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_adduh_r_ob(target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_rrshift1_add_u8(rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_addu_qh(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_add_u16(env, rs3, rt3);
+    tempC = mipsdsp_add_u16(env, rs2, rt2);
+    tempB = mipsdsp_add_u16(env, rs1, rt1);
+    tempA = mipsdsp_add_u16(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return temp;
+}
+
+target_ulong helper_addu_s_qh(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sat_add_u16(env, rs3, rt3);
+    tempC = mipsdsp_sat_add_u16(env, rs2, rt2);
+    tempB = mipsdsp_sat_add_u16(env, rs1, rt1);
+    tempA = mipsdsp_sat_add_u16(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return temp;
+}
+#endif
+
+target_ulong helper_subq_ph(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl;
+    uint16_t rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    tempB = mipsdsp_sub_i16(env, rsh, rth);
+    tempA = mipsdsp_sub_i16(env, rsl, rtl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subq_s_ph(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl;
+    uint16_t rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    tempB = mipsdsp_sat16_sub(env, rsh, rth);
+    tempA = mipsdsp_sat16_sub(env, rsl, rtl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_subq_qh(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sub_i16(env, rs3, rt3);
+    tempC = mipsdsp_sub_i16(env, rs2, rt2);
+    tempB = mipsdsp_sub_i16(env, rs1, rt1);
+    tempA = mipsdsp_sub_i16(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+      ((uint64_t)tempB << 16) | (uint64_t)tempA;
+    return temp;
+}
+
+target_ulong helper_subq_s_qh(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sat16_sub(env, rs3, rt3);
+    tempC = mipsdsp_sat16_sub(env, rs2, rt2);
+    tempB = mipsdsp_sat16_sub(env, rs1, rt1);
+    tempA = mipsdsp_sat16_sub(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+    return temp;
+}
+#endif
+
+target_ulong helper_subq_s_w(CPUMIPSState *env,
+                             target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+
+    rd = mipsdsp_sat32_sub(env, rs, rt);
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_subq_pw(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t rs1, rs0;
+    uint32_t rt1, rt0;
+    uint32_t tempB, tempA;
+
+    rs1 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempB = mipsdsp_sub32(env, rs1, rt1);
+    tempA = mipsdsp_sub32(env, rs0, rt0);
+
+    return ((uint64_t)tempB << 32) | (uint64_t)tempA;
+}
+
+target_ulong helper_subq_s_pw(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint32_t rs1, rs0;
+    uint32_t rt1, rt0;
+    uint32_t tempB, tempA;
+
+    rs1 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt1 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempB = mipsdsp_sat32_sub(env, rs1, rt1);
+    tempA = mipsdsp_sat32_sub(env, rs0, rt0);
+
+    return ((uint64_t)tempB << 32) | (uint64_t)tempA;
+}
+#endif
+
+target_ulong helper_subu_qb(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint8_t rs3, rs2, rs1, rs0;
+    uint8_t rt3, rt2, rt1, rt0;
+    uint8_t tempD, tempC, tempB, tempA;
+    uint32_t rd;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt0 =  rt & MIPSDSP_Q0;
+
+    tempD = mipsdsp_sub_u8(env, rs3, rt3);
+    tempC = mipsdsp_sub_u8(env, rs2, rt2);
+    tempB = mipsdsp_sub_u8(env, rs1, rt1);
+    tempA = mipsdsp_sub_u8(env, rs0, rt0);
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subu_s_qb(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint8_t rs3, rs2, rs1, rs0;
+    uint8_t rt3, rt2, rt1, rt0;
+    uint8_t tempD, tempC, tempB, tempA;
+    uint32_t rd;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt0 =  rt & MIPSDSP_Q0;
+
+    tempD = mipsdsp_satu8_sub(env, rs3, rt3);
+    tempC = mipsdsp_satu8_sub(env, rs2, rt2);
+    tempB = mipsdsp_satu8_sub(env, rs1, rt1);
+    tempA = mipsdsp_satu8_sub(env, rs0, rt0);
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subuh_qb(target_ulong rs, target_ulong rt)
+{
+    uint8_t rs3, rs2, rs1, rs0;
+    uint8_t rt3, rt2, rt1, rt0;
+    uint8_t tempD, tempC, tempB, tempA;
+    uint32_t rd;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt0 =  rt & MIPSDSP_Q0;
+
+    tempD = ((uint16_t)rs3 - (uint16_t)rt3) >> 1;
+    tempC = ((uint16_t)rs2 - (uint16_t)rt2) >> 1;
+    tempB = ((uint16_t)rs1 - (uint16_t)rt1) >> 1;
+    tempA = ((uint16_t)rs0 - (uint16_t)rt0) >> 1;
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+
+    return (target_ulong)rd;
+}
+
+target_ulong helper_subuh_r_qb(target_ulong rs, target_ulong rt)
+{
+    uint8_t rs3, rs2, rs1, rs0;
+    uint8_t rt3, rt2, rt1, rt0;
+    uint8_t tempD, tempC, tempB, tempA;
+    uint32_t rd;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rt0 =  rt & MIPSDSP_Q0;
+
+    tempD = ((uint16_t)rs3 - (uint16_t)rt3 + 1) >> 1;
+    tempC = ((uint16_t)rs2 - (uint16_t)rt2 + 1) >> 1;
+    tempB = ((uint16_t)rs1 - (uint16_t)rt1 + 1) >> 1;
+    tempA = ((uint16_t)rs0 - (uint16_t)rt0 + 1) >> 1;
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+
+    return (target_ulong)rd;
+}
+
+target_ulong helper_subu_ph(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl, rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    tempB = mipsdsp_sub_u16_u16(env, rth, rsh);
+    tempA = mipsdsp_sub_u16_u16(env, rtl, rsl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subu_s_ph(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl, rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    tempB = mipsdsp_satu16_sub_u16_u16(env, rth, rsh);
+    tempA = mipsdsp_satu16_sub_u16_u16(env, rtl, rsl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subqh_ph(target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl;
+    uint16_t rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+    tempB = mipsdsp_rshift1_sub_q16(rsh, rth);
+    tempA = mipsdsp_rshift1_sub_q16(rsl, rtl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subqh_r_ph(target_ulong rs, target_ulong rt)
+{
+    uint16_t rsh, rsl;
+    uint16_t rth, rtl;
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+    tempB = mipsdsp_rrshift1_sub_q16(rsh, rth);
+    tempA = mipsdsp_rrshift1_sub_q16(rsl, rtl);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subqh_w(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+
+    rd = mipsdsp_rshift1_sub_q32(rs, rt);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_subqh_r_w(target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+
+    rd = mipsdsp_rrshift1_sub_q32(rs, rt);
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_subu_ob(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_sub_u8(env, rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result += (uint64_t)temp[i] << (i * 8);
+    }
+
+    return result;
+}
+
+target_ulong helper_subu_s_ob(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = mipsdsp_satu8_sub(env, rs_t[i], rt_t[i]);
+    }
+
+    for (i = 0; i < 8; i++) {
+        result += (uint64_t)temp[i] << (i * 8);
+    }
+
+    return result;
+}
+
+target_ulong helper_subuh_ob(target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = ((uint16_t)rs_t[i] - (uint16_t)rt_t[i]) >> 1;
+      }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_subuh_r_ob(target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint8_t rs_t[8], rt_t[8];
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        rt_t[i] = (rt >> (8 * i)) & MIPSDSP_Q0;
+        temp[i] = ((uint16_t)rs_t[i] - (uint16_t)rt_t[i] + 1) >> 1;
+    }
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_subu_qh(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sub_u16_u16(env, rs3, rt3);
+    tempC = mipsdsp_sub_u16_u16(env, rs2, rt2);
+    tempB = mipsdsp_sub_u16_u16(env, rs1, rt1);
+    tempA = mipsdsp_sub_u16_u16(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+      ((uint64_t)tempB << 16) | (uint64_t)tempA;
+    return temp;
+}
+
+
+target_ulong helper_subu_s_qh(CPUMIPSState *env,
+                              target_ulong rs, target_ulong rt)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_satu16_sub_u16_u16(env, rs3, rt3);
+    tempC = mipsdsp_satu16_sub_u16_u16(env, rs2, rt2);
+    tempB = mipsdsp_satu16_sub_u16_u16(env, rs1, rt1);
+    tempA = mipsdsp_satu16_sub_u16_u16(env, rs0, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+    return temp;
+}
+#endif
+
+target_ulong helper_addsc(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint64_t temp, tempRs, tempRt;
+    int32_t flag;
+
+    tempRs = (uint64_t)rs & MIPSDSP_LLO;
+    tempRt = (uint64_t)rt & MIPSDSP_LLO;
+
+    temp = tempRs + tempRt;
+    flag = (temp & 0x0100000000ull) >> 32;
+    set_DSPControl_carryflag(env, flag);
+
+    return (target_long)(int32_t)(temp & MIPSDSP_LLO);
+}
+
+target_ulong helper_addwc(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t rd;
+    int32_t temp32, temp31;
+    int64_t tempL;
+
+    tempL = (int32_t)rs + (int32_t)rt + get_DSPControl_carryflag(env);
+    temp31 = (tempL >> 31) & 0x01;
+    temp32 = (tempL >> 32) & 0x01;
+
+    if (temp31 != temp32) {
+        set_DSPControl_overflow_flag(env, 1, 20);
+    }
+
+    rd = tempL & MIPSDSP_LLO;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_modsub(target_ulong rs, target_ulong rt)
+{
+    int32_t decr;
+    uint16_t lastindex;
+    target_ulong rd;
+
+    decr = rt & MIPSDSP_Q0;
+    lastindex = (rt >> 8) & MIPSDSP_LO;
+
+    if ((rs & MIPSDSP_LLO) == 0x00000000) {
+        rd = (target_ulong)lastindex;
+    } else {
+        rd = rs - decr;
+    }
+
+    return rd;
+}
+
+target_ulong helper_raddu_w_qb(target_ulong rs)
+{
+    uint8_t  rs3, rs2, rs1, rs0;
+    uint16_t temp;
+    uint32_t rd;
+
+    rs3 = (rs & MIPSDSP_Q3) >> 24;
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs1 = (rs & MIPSDSP_Q1) >>  8;
+    rs0 =  rs & MIPSDSP_Q0;
+
+    temp = (uint16_t)rs3 + (uint16_t)rs2 + (uint16_t)rs1 + (uint16_t)rs0;
+    rd = temp;
+
+    return (target_ulong)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_raddu_l_ob(target_ulong rs)
+{
+    int i;
+    uint16_t rs_t[8];
+    uint64_t temp;
+
+    temp = 0;
+
+    for (i = 0; i < 8; i++) {
+        rs_t[i] = (rs >> (8 * i)) & MIPSDSP_Q0;
+        temp += (uint64_t)rs_t[i];
+    }
+
+    return temp;
+}
+#endif
+
+target_ulong helper_absq_s_qb(CPUMIPSState *env, target_ulong rt)
+{
+    uint32_t rd;
+    int8_t tempD, tempC, tempB, tempA;
+
+    tempD = (rt & MIPSDSP_Q3) >> 24;
+    tempC = (rt & MIPSDSP_Q2) >> 16;
+    tempB = (rt & MIPSDSP_Q1) >>  8;
+    tempA =  rt & MIPSDSP_Q0;
+
+    rd = (((uint32_t)mipsdsp_sat_abs_u8 (env, tempD) << 24) & MIPSDSP_Q3) |
+         (((uint32_t)mipsdsp_sat_abs_u8 (env, tempC) << 16) & MIPSDSP_Q2) |
+         (((uint32_t)mipsdsp_sat_abs_u8 (env, tempB) <<  8) & MIPSDSP_Q1) |
+         ((uint32_t)mipsdsp_sat_abs_u8 (env, tempA) & MIPSDSP_Q0);
+
+    return (target_ulong)rd;
+}
+
+target_ulong helper_absq_s_ph(CPUMIPSState *env, target_ulong rt)
+{
+    uint32_t rd;
+    int16_t tempA, tempB;
+
+    tempA = (rt & MIPSDSP_HI) >> 16;
+    tempB =  rt & MIPSDSP_LO;
+
+    rd = ((uint32_t)(uint16_t)mipsdsp_sat_abs_u16 (env, tempA) << 16) |
+        ((uint32_t)((uint16_t)mipsdsp_sat_abs_u16 (env, tempB)) & 0xFFFF);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_absq_s_w(CPUMIPSState *env, target_ulong rt)
+{
+    uint32_t rd;
+    int32_t temp;
+
+    temp = rt;
+    rd = mipsdsp_sat_abs_u32(env, temp);
+
+    return (target_ulong)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_absq_s_ob(CPUMIPSState *env, target_ulong rt)
+{
+    int8_t tempH, tempG, tempF, tempE;
+    int8_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    tempH = (rt >> 56) & MIPSDSP_Q0;
+    tempG = (rt >> 48) & MIPSDSP_Q0;
+    tempF = (rt >> 40) & MIPSDSP_Q0;
+    tempE = (rt >> 32) & MIPSDSP_Q0;
+    tempD = (rt >> 24) & MIPSDSP_Q0;
+    tempC = (rt >> 16) & MIPSDSP_Q0;
+    tempB = (rt >> 8) & MIPSDSP_Q0;
+    tempA = rt & MIPSDSP_Q0;
+
+    tempH = mipsdsp_sat_abs_u8(env, tempH);
+    tempG = mipsdsp_sat_abs_u8(env, tempG);
+    tempF = mipsdsp_sat_abs_u8(env, tempF);
+    tempE = mipsdsp_sat_abs_u8(env, tempE);
+    tempD = mipsdsp_sat_abs_u8(env, tempD);
+    tempC = mipsdsp_sat_abs_u8(env, tempC);
+    tempB = mipsdsp_sat_abs_u8(env, tempB);
+    tempA = mipsdsp_sat_abs_u8(env, tempA);
+
+    temp = ((uint64_t)(uint8_t)tempH << 56) | ((uint64_t)(uint8_t)tempG << 48) |
+        ((uint64_t)(uint8_t)tempF << 40) | ((uint64_t)(uint8_t)tempE << 32) |
+        ((uint64_t)(uint8_t)tempD << 24) | ((uint64_t)(uint8_t)tempC << 16) |
+        ((uint64_t)(uint8_t)tempB << 8) | (uint64_t)(uint8_t)tempA;
+
+    return temp;
+}
+
+target_ulong helper_absq_s_qh(CPUMIPSState *env, target_ulong rt)
+{
+    int16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    tempD = (rt >> 48) & MIPSDSP_LO;
+    tempC = (rt >> 32) & MIPSDSP_LO;
+    tempB = (rt >> 16) & MIPSDSP_LO;
+    tempA = rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sat_abs_u16(env, tempD);
+    tempC = mipsdsp_sat_abs_u16(env, tempC);
+    tempB = mipsdsp_sat_abs_u16(env, tempB);
+    tempA = mipsdsp_sat_abs_u16(env, tempA);
+
+    temp = ((uint64_t)(uint16_t)tempD << 48) | \
+           ((uint64_t)(uint16_t)tempC << 32) | \
+           ((uint64_t)(uint16_t)tempB << 16) | \
+           (uint64_t)(uint16_t)tempA;
+
+    return temp;
+}
+
+target_ulong helper_absq_s_pw(CPUMIPSState *env, target_ulong rt)
+{
+    int32_t tempB, tempA;
+    uint64_t temp;
+
+    tempB = (rt >> 32) & MIPSDSP_LLO;
+    tempA = rt & MIPSDSP_LLO;
+
+    tempB = mipsdsp_sat_abs_u32(env, tempB);
+    tempA = mipsdsp_sat_abs_u32(env, tempA);
+
+    temp = ((uint64_t)(uint32_t)tempB << 32) | (uint64_t)(uint32_t)tempA;
+
+    return temp;
+}
+#endif
+
+target_ulong helper_precr_qb_ph(target_ulong rs, target_ulong rt)
+{
+    uint8_t  rs2, rs0, rt2, rt0;
+    uint32_t rd;
+
+    rs2 = (rs & MIPSDSP_Q2) >> 16;
+    rs0 =  rs & MIPSDSP_Q0;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt0 =  rt & MIPSDSP_Q0;
+    rd = ((uint32_t)rs2 << 24) | ((uint32_t)rs0 << 16) |
+         ((uint32_t)rt2 <<  8) | (uint32_t)rt0;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_precrq_qb_ph(target_ulong rs, target_ulong rt)
+{
+    uint8_t tempD, tempC, tempB, tempA;
+    uint32_t rd;
+
+    tempD = (rs & MIPSDSP_Q3) >> 24;
+    tempC = (rs & MIPSDSP_Q1) >>  8;
+    tempB = (rt & MIPSDSP_Q3) >> 24;
+    tempA = (rt & MIPSDSP_Q1) >>  8;
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_precr_sra_ph_w(uint32_t sa, target_ulong rs,
+                                   target_ulong rt)
+{
+    uint16_t tempB, tempA;
+
+    tempB = ((int32_t)rt >> sa) & MIPSDSP_LO;
+    tempA = ((int32_t)rs >> sa) & MIPSDSP_LO;
+    rt = ((uint32_t)tempB << 16) | ((uint32_t)tempA & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rt;
+}
+
+target_ulong helper_precr_sra_r_ph_w(uint32_t sa,
+                                     target_ulong rs, target_ulong rt)
+{
+    uint64_t tempB, tempA;
+
+    /* If sa = 0, then (sa - 1) = -1 will case shift error, so we need else. */
+    if (sa == 0) {
+        tempB = (rt & MIPSDSP_LO) << 1;
+        tempA = (rs & MIPSDSP_LO) << 1;
+    } else {
+        tempB = ((int32_t)rt >> (sa - 1)) + 1;
+        tempA = ((int32_t)rs >> (sa - 1)) + 1;
+    }
+    rt = (((tempB >> 1) & MIPSDSP_LO) << 16) | ((tempA >> 1) & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rt;
+}
+
+target_ulong helper_precrq_ph_w(target_ulong rs, target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    tempB = (rs & MIPSDSP_HI) >> 16;
+    tempA = (rt & MIPSDSP_HI) >> 16;
+    rd = ((uint32_t)tempB << 16) | ((uint32_t)tempA & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_precrq_rs_ph_w(CPUMIPSState *env,
+                                   target_ulong rs, target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t rd;
+
+    tempB = mipsdsp_trunc16_sat16_round(env, rs);
+    tempA = mipsdsp_trunc16_sat16_round(env, rt);
+    rd = ((uint32_t)tempB << 16) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_precr_ob_qh(target_ulong rs, target_ulong rt)
+{
+    uint8_t rs6, rs4, rs2, rs0;
+    uint8_t rt6, rt4, rt2, rt0;
+    uint64_t temp;
+
+    rs6 = (rs >> 48) & MIPSDSP_Q0;
+    rs4 = (rs >> 32) & MIPSDSP_Q0;
+    rs2 = (rs >> 16) & MIPSDSP_Q0;
+    rs0 = rs & MIPSDSP_Q0;
+    rt6 = (rt >> 48) & MIPSDSP_Q0;
+    rt4 = (rt >> 32) & MIPSDSP_Q0;
+    rt2 = (rt >> 16) & MIPSDSP_Q0;
+    rt0 = rt & MIPSDSP_Q0;
+
+    temp = ((uint64_t)rs6 << 56) | ((uint64_t)rs4 << 48) |
+           ((uint64_t)rs2 << 40) | ((uint64_t)rs0 << 32) |
+           ((uint64_t)rt6 << 24) | ((uint64_t)rt4 << 16) |
+           ((uint64_t)rt2 << 8) | (uint64_t)rt0;
+
+    return temp;
+}
+
+target_ulong helper_precr_sra_qh_pw(target_ulong rs, target_ulong rt,
+                                    uint32_t sa)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t result;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    /* When sa = 0, we use rt2, rt0, rs2, rs0;
+     * when sa != 0, we use rt3, rt1, rs3, rs1. */
+    if (sa == 0) {
+        tempD = rt2;
+        tempC = rt0;
+        tempB = rs2;
+        tempA = rs0;
+    } else {
+        tempD = (int16_t)rt3 >> sa;
+        tempC = (int16_t)rt1 >> sa;
+        tempB = (int16_t)rs3 >> sa;
+        tempA = (int16_t)rs1 >> sa;
+    }
+
+    result = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+             ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return result;
+}
+
+
+target_ulong helper_precr_sra_r_qh_pw(target_ulong rs, target_ulong rt,
+                                      uint32_t sa)
+{
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t result;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    /* When sa = 0, we use rt2, rt0, rs2, rs0;
+     * when sa != 0, we use rt3, rt1, rs3, rs1. */
+    if (sa == 0) {
+        tempD = rt2 << 1;
+        tempC = rt0 << 1;
+        tempB = rs2 << 1;
+        tempA = rs0 << 1;
+    } else {
+        tempD = (((int16_t)rt3 >> sa) + 1) >> 1;
+        tempC = (((int16_t)rt1 >> sa) + 1) >> 1;
+        tempB = (((int16_t)rs3 >> sa) + 1) >> 1;
+        tempA = (((int16_t)rs1 >> sa) + 1) >> 1;
+    }
+
+    result = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+             ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return result;
+}
+
+target_ulong helper_precrq_ob_qh(target_ulong rs, target_ulong rt)
+{
+    uint8_t rs6, rs4, rs2, rs0;
+    uint8_t rt6, rt4, rt2, rt0;
+    uint64_t temp;
+
+    rs6 = (rs >> 56) & MIPSDSP_Q0;
+    rs4 = (rs >> 40) & MIPSDSP_Q0;
+    rs2 = (rs >> 24) & MIPSDSP_Q0;
+    rs0 = (rs >> 8) & MIPSDSP_Q0;
+    rt6 = (rt >> 56) & MIPSDSP_Q0;
+    rt4 = (rt >> 40) & MIPSDSP_Q0;
+    rt2 = (rt >> 24) & MIPSDSP_Q0;
+    rt0 = (rt >> 8) & MIPSDSP_Q0;
+
+    temp = ((uint64_t)rs6 << 56) | ((uint64_t)rs4 << 48) |
+           ((uint64_t)rs2 << 40) | ((uint64_t)rs0 << 32) |
+           ((uint64_t)rt6 << 24) | ((uint64_t)rt4 << 16) |
+           ((uint64_t)rt2 << 8) | (uint64_t)rt0;
+
+    return temp;
+}
+
+target_ulong helper_precrq_qh_pw(target_ulong rs, target_ulong rt)
+{
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    tempD = (rs >> 48) & MIPSDSP_LO;
+    tempC = (rs >> 16) & MIPSDSP_LO;
+    tempB = (rt >> 48) & MIPSDSP_LO;
+    tempA = (rt >> 16) & MIPSDSP_LO;
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return temp;
+}
+
+target_ulong helper_precrq_rs_qh_pw(CPUMIPSState *env,
+                                    target_ulong rs, target_ulong rt)
+{
+    uint32_t rs2, rs0;
+    uint32_t rt2, rt0;
+    uint16_t tempD, tempC, tempB, tempA;
+    uint64_t temp;
+
+    rs2 = (rs >> 32) & MIPSDSP_LLO;
+    rs0 = rs & MIPSDSP_LLO;
+    rt2 = (rt >> 32) & MIPSDSP_LLO;
+    rt0 = rt & MIPSDSP_LLO;
+
+    tempD = mipsdsp_trunc16_sat16_round(env, rs2);
+    tempC = mipsdsp_trunc16_sat16_round(env, rs0);
+    tempB = mipsdsp_trunc16_sat16_round(env, rt2);
+    tempA = mipsdsp_trunc16_sat16_round(env, rt0);
+
+    temp = ((uint64_t)tempD << 48) | ((uint64_t)tempC << 32) |
+           ((uint64_t)tempB << 16) | (uint64_t)tempA;
+
+    return temp;
+}
+
+target_ulong helper_precrq_pw_l(target_ulong rs, target_ulong rt)
+{
+    uint32_t tempB, tempA;
+    uint64_t temp;
+
+    tempB = (rs >> 32) & MIPSDSP_LLO;
+    tempA = (rt >> 32) & MIPSDSP_LLO;
+
+    temp = ((uint64_t)tempB << 32) | (uint64_t)tempA;
+
+    return temp;
+}
+#endif
+
+target_ulong helper_precrqu_s_qb_ph(CPUMIPSState *env,
+                                    target_ulong rs, target_ulong rt)
+{
+    uint8_t  tempD, tempC, tempB, tempA;
+    uint16_t rsh, rsl, rth, rtl;
+    uint32_t rd;
+
+    rsh = (rs & MIPSDSP_HI) >> 16;
+    rsl =  rs & MIPSDSP_LO;
+    rth = (rt & MIPSDSP_HI) >> 16;
+    rtl =  rt & MIPSDSP_LO;
+
+    tempD = mipsdsp_sat8_reduce_precision(env, rsh);
+    tempC = mipsdsp_sat8_reduce_precision(env, rsl);
+    tempB = mipsdsp_sat8_reduce_precision(env, rth);
+    tempA = mipsdsp_sat8_reduce_precision(env, rtl);
+
+    rd = ((uint32_t)tempD << 24) | ((uint32_t)tempC << 16) |
+         ((uint32_t)tempB <<  8) | (uint32_t)tempA;
+
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_precrqu_s_ob_qh(CPUMIPSState *env,
+                                    target_ulong rs, target_ulong rt)
+{
+    int i;
+    uint16_t rs3, rs2, rs1, rs0;
+    uint16_t rt3, rt2, rt1, rt0;
+    uint8_t temp[8];
+    uint64_t result;
+
+    result = 0;
+
+    rs3 = (rs >> 48) & MIPSDSP_LO;
+    rs2 = (rs >> 32) & MIPSDSP_LO;
+    rs1 = (rs >> 16) & MIPSDSP_LO;
+    rs0 = rs & MIPSDSP_LO;
+    rt3 = (rt >> 48) & MIPSDSP_LO;
+    rt2 = (rt >> 32) & MIPSDSP_LO;
+    rt1 = (rt >> 16) & MIPSDSP_LO;
+    rt0 = rt & MIPSDSP_LO;
+
+    temp[7] = mipsdsp_sat8_reduce_precision(env, rs3);
+    temp[6] = mipsdsp_sat8_reduce_precision(env, rs2);
+    temp[5] = mipsdsp_sat8_reduce_precision(env, rs1);
+    temp[4] = mipsdsp_sat8_reduce_precision(env, rs0);
+    temp[3] = mipsdsp_sat8_reduce_precision(env, rt3);
+    temp[2] = mipsdsp_sat8_reduce_precision(env, rt2);
+    temp[1] = mipsdsp_sat8_reduce_precision(env, rt1);
+    temp[0] = mipsdsp_sat8_reduce_precision(env, rt0);
+
+    for (i = 0; i < 8; i++) {
+        result |= (uint64_t)temp[i] << (8 * i);
+    }
+
+    return result;
+}
+
+target_ulong helper_preceq_pw_qhl(target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t tempBI, tempAI;
+
+    tempB = (rt >> 48) & MIPSDSP_LO;
+    tempA = (rt >> 32) & MIPSDSP_LO;
+
+    tempBI = (uint32_t)tempB << 16;
+    tempAI = (uint32_t)tempA << 16;
+
+    return ((uint64_t)tempBI << 32) | ((uint64_t)tempAI);
+}
+
+target_ulong helper_preceq_pw_qhr(target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t tempBI, tempAI;
+
+    tempB = (rt >> 16) & MIPSDSP_LO;
+    tempA = rt & MIPSDSP_LO;
+
+    tempBI = (uint32_t)tempB << 16;
+    tempAI = (uint32_t)tempA << 16;
+
+    return ((uint64_t)tempBI << 32) | ((uint64_t)tempAI);
+}
+
+target_ulong helper_preceq_pw_qhla(target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t tempBI, tempAI;
+
+    tempB = (rt >> 48) & MIPSDSP_LO;
+    tempA = (rt >> 16) & MIPSDSP_LO;
+
+    tempBI = (uint32_t)tempB << 16;
+    tempAI = (uint32_t)tempA << 16;
+
+    return ((uint64_t)tempBI << 32) | ((uint64_t)tempAI);
+}
+
+target_ulong helper_preceq_pw_qhra(target_ulong rt)
+{
+    uint16_t tempB, tempA;
+    uint32_t tempBI, tempAI;
+
+    tempB = (rt >> 32) & MIPSDSP_LO;
+    tempA = rt & MIPSDSP_LO;
+
+    tempBI = (uint32_t)tempB << 16;
+    tempAI = (uint32_t)tempA << 16;
+
+    return ((uint64_t)tempBI << 32) | ((uint64_t)tempAI);
+}
+
+#endif
+
+target_ulong helper_precequ_ph_qbl(target_ulong rt)
+{
+    uint8_t  rt3, rt2;
+    uint16_t tempB, tempA;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+
+    tempB = (uint16_t)rt3 << 7;
+    tempA = (uint16_t)rt2 << 7;
+
+    return (target_long)(int32_t)(((uint32_t)tempB << 16) | (uint32_t)tempA);
+}
+
+target_ulong helper_precequ_ph_qbr(target_ulong rt)
+{
+    uint8_t  rt1, rt0;
+    uint16_t tempB, tempA;
+
+    rt1 = (rt & MIPSDSP_Q1) >> 8;
+    rt0 =  rt & MIPSDSP_Q0;
+    tempB = (uint16_t)rt1 << 7;
+    tempA = (uint16_t)rt0 << 7;
+
+    return (target_long)(int32_t)(((uint32_t)tempB << 16) | (uint32_t)tempA);
+}
+
+target_ulong helper_precequ_ph_qbla(target_ulong rt)
+{
+    uint8_t  rt3, rt1;
+    uint16_t tempB, tempA;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+
+    tempB = (uint16_t)rt3 << 7;
+    tempA = (uint16_t)rt1 << 7;
+
+    return (target_long)(int32_t)(((uint32_t)tempB << 16) | (uint32_t)tempA);
+}
+
+target_ulong helper_precequ_ph_qbra(target_ulong rt)
+{
+    uint8_t  rt2, rt0;
+    uint16_t tempB, tempA;
+
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt0 =  rt & MIPSDSP_Q0;
+    tempB = (uint16_t)rt2 << 7;
+    tempA = (uint16_t)rt0 << 7;
+
+    return (target_long)(int32_t)(((uint32_t)tempB << 16) | (uint32_t)tempA);
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_precequ_qh_obl(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint16_t tempDS, tempCS, tempBS, tempAS;
+    uint64_t temp;
+
+    tempDC = (rt >> 56) & MIPSDSP_Q0;
+    tempCC = (rt >> 48) & MIPSDSP_Q0;
+    tempBC = (rt >> 40) & MIPSDSP_Q0;
+    tempAC = (rt >> 32) & MIPSDSP_Q0;
+
+    tempDS = (uint16_t)tempDC << 7;
+    tempCS = (uint16_t)tempCC << 7;
+    tempBS = (uint16_t)tempBC << 7;
+    tempAS = (uint16_t)tempAC << 7;
+
+    temp = ((uint64_t)tempDS << 48) | ((uint64_t)tempCS << 32) |
+           ((uint64_t)tempBS << 16) | (uint64_t)tempAS;
+    return temp;
+}
+
+target_ulong helper_precequ_qh_obr(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint16_t tempDS, tempCS, tempBS, tempAS;
+    uint64_t temp;
+
+    tempDC = (rt >> 24) & MIPSDSP_Q0;
+    tempCC = (rt >> 16) & MIPSDSP_Q0;
+    tempBC = (rt >> 8) & MIPSDSP_Q0;
+    tempAC = rt & MIPSDSP_Q0;
+
+    tempDS = (uint16_t)tempDC << 7;
+    tempCS = (uint16_t)tempCC << 7;
+    tempBS = (uint16_t)tempBC << 7;
+    tempAS = (uint16_t)tempAC << 7;
+
+    temp = ((uint64_t)tempDS << 48) | ((uint64_t)tempCS << 32) |
+           ((uint64_t)tempBS << 16) | (uint64_t)tempAS;
+    return temp;
+}
+
+target_ulong helper_precequ_qh_obla(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint16_t tempDS, tempCS, tempBS, tempAS;
+    uint64_t temp;
+
+    tempDC = (rt >> 56) & MIPSDSP_Q0;
+    tempCC = (rt >> 40) & MIPSDSP_Q0;
+    tempBC = (rt >> 24) & MIPSDSP_Q0;
+    tempAC = (rt >> 8) & MIPSDSP_Q0;
+
+    tempDS = (uint16_t)tempDC << 7;
+    tempCS = (uint16_t)tempCC << 7;
+    tempBS = (uint16_t)tempBC << 7;
+    tempAS = (uint16_t)tempAC << 7;
+
+    temp = ((uint64_t)tempDS << 48) | ((uint64_t)tempCS << 32) |
+           ((uint64_t)tempBS << 16) | (uint64_t)tempAS;
+    return temp;
+}
+
+target_ulong helper_precequ_qh_obra(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint16_t tempDS, tempCS, tempBS, tempAS;
+    uint64_t temp;
+
+    tempDC = (rt >> 48) & MIPSDSP_Q0;
+    tempCC = (rt >> 32) & MIPSDSP_Q0;
+    tempBC = (rt >> 16) & MIPSDSP_Q0;
+    tempAC = rt & MIPSDSP_Q0;
+
+    tempDS = (uint16_t)tempDC << 7;
+    tempCS = (uint16_t)tempCC << 7;
+    tempBS = (uint16_t)tempBC << 7;
+    tempAS = (uint16_t)tempAC << 7;
+
+    temp = ((uint64_t)tempDS << 48) | ((uint64_t)tempCS << 32) |
+           ((uint64_t)tempBS << 16) | (uint64_t)tempAS;
+    return temp;
+}
+#endif
+
+target_ulong helper_preceu_ph_qbl(target_ulong rt)
+{
+    uint8_t  rt3, rt2;
+    uint32_t rd;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rd = ((uint32_t)(uint16_t)rt3 << 16) | \
+         ((uint32_t)(uint16_t)rt2 & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_preceu_ph_qbr(target_ulong rt)
+{
+    uint8_t  rt1, rt0;
+    uint32_t rd;
+
+    rt1 = (rt & MIPSDSP_Q1) >> 8;
+    rt0 =  rt & MIPSDSP_Q0;
+    rd = ((uint32_t)(uint16_t)rt1 << 16) | \
+         ((uint32_t)(uint16_t)rt0 & MIPSDSP_LO);
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_preceu_ph_qbla(target_ulong rt)
+{
+    uint8_t  rt3, rt1;
+    uint32_t rd;
+
+    rt3 = (rt & MIPSDSP_Q3) >> 24;
+    rt1 = (rt & MIPSDSP_Q1) >>  8;
+    rd = ((uint32_t)(uint16_t)rt3 << 16) | \
+         ((uint32_t)(uint16_t)rt1 & MIPSDSP_LO);
+
+    return (target_long)(int32_t)rd;
+}
+
+target_ulong helper_preceu_ph_qbra(target_ulong rt)
+{
+    uint8_t  rt2, rt0;
+    uint32_t rd;
+
+    rt2 = (rt & MIPSDSP_Q2) >> 16;
+    rt0 =  rt & MIPSDSP_Q0;
+    rd = ((uint32_t)(uint16_t)rt2 << 16) | \
+         ((uint32_t)(uint16_t)rt0 & MIPSDSP_LO);
+    return (target_long)(int32_t)rd;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_preceu_qh_obl(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint64_t temp;
+
+    tempDC = (rt >> 56) & MIPSDSP_Q0;
+    tempCC = (rt >> 48) & MIPSDSP_Q0;
+    tempBC = (rt >> 40) & MIPSDSP_Q0;
+    tempAC = (rt >> 32) & MIPSDSP_Q0;
+
+    temp = ((uint64_t)(uint16_t)tempDC << 48) | \
+           ((uint64_t)(uint16_t)tempCC << 32) | \
+           ((uint64_t)(uint16_t)tempBC << 16) | \
+           (uint64_t)(uint16_t)tempAC;
+    return temp;
+}
+
+target_ulong helper_preceu_qh_obr(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint64_t temp;
+
+    tempDC = (rt >> 24) & MIPSDSP_Q0;
+    tempCC = (rt >> 16) & MIPSDSP_Q0;
+    tempBC = (rt >> 8) & MIPSDSP_Q0;
+    tempAC = rt & MIPSDSP_Q0;
+
+    temp = ((uint64_t)(uint16_t)tempDC << 48) | \
+           ((uint64_t)(uint16_t)tempCC << 32) | \
+           ((uint64_t)(uint16_t)tempBC << 16) | \
+           (uint64_t)(uint16_t)tempAC;
+
+    return temp;
+}
+
+target_ulong helper_preceu_qh_obla(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint64_t temp;
+
+    tempDC = (rt >> 56) & MIPSDSP_Q0;
+    tempCC = (rt >> 40) & MIPSDSP_Q0;
+    tempBC = (rt >> 24) & MIPSDSP_Q0;
+    tempAC = (rt >> 8) & MIPSDSP_Q0;
+
+    temp = ((uint64_t)(uint16_t)tempDC << 48) | \
+           ((uint64_t)(uint16_t)tempCC << 32) | \
+           ((uint64_t)(uint16_t)tempBC << 16) | \
+           (uint64_t)(uint16_t)tempAC;
+
+    return temp;
+}
+
+target_ulong helper_preceu_qh_obra(target_ulong rt)
+{
+    uint8_t tempDC, tempCC, tempBC, tempAC;
+    uint64_t temp;
+
+    tempDC = (rt >> 48) & MIPSDSP_Q0;
+    tempCC = (rt >> 32) & MIPSDSP_Q0;
+    tempBC = (rt >> 16) & MIPSDSP_Q0;
+    tempAC = rt & MIPSDSP_Q0;
+
+    temp = ((uint64_t)(uint16_t)tempDC << 48) | \
+           ((uint64_t)(uint16_t)tempCC << 32) | \
+           ((uint64_t)(uint16_t)tempBC << 16) | \
+           (uint64_t)(uint16_t)tempAC;
+
+    return temp;
+}
+#endif
+
+#undef MIPSDSP_LHI
+#undef MIPSDSP_LLO
+#undef MIPSDSP_HI
+#undef MIPSDSP_LO
+#undef MIPSDSP_Q3
+#undef MIPSDSP_Q2
+#undef MIPSDSP_Q1
+#undef MIPSDSP_Q0
