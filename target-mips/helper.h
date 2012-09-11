@@ -576,4 +576,11 @@ DEF_HELPER_FLAGS_4(dmsub, 0, void, env, tl, tl, i32)
 DEF_HELPER_FLAGS_4(dmsubu, 0, void, env, tl, tl, i32)
 #endif
 
+/* DSP Bit/Manipulation Sub-class insns */
+DEF_HELPER_FLAGS_1(bitrev, TCG_CALL_CONST | TCG_CALL_PURE, tl, tl)
+DEF_HELPER_FLAGS_3(insv, 0, tl, env, tl, tl)
+#if defined(TARGET_MIPS64)
+DEF_HELPER_FLAGS_3(dinsv, 0, tl, env, tl, tl);
+#endif
+
 #include "def-helper.h"

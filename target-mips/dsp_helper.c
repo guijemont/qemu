@@ -5822,6 +5822,81 @@ void helper_dmsubu(CPUMIPSState *env,
 }
 #endif
 
+/** DSP Bit/Manipulation Sub-class insns **/
+target_ulong helper_bitrev(target_ulong rt)
+{
+    int32_t temp;
+    uint32_t rd;
+    int i, last;
+
+    temp = rt & MIPSDSP_LO;
+    rd = 0;
+    for (i = 0; i < 16; i++) {
+        last = temp % 2;
+        temp = temp >> 1;
+        rd = rd | (last << (15 - i));
+    }
+
+    return (target_ulong)rd;
+}
+
+target_ulong helper_insv(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    uint32_t pos, size, msb, lsb, filter;
+    uint32_t temp, temprs, temprt;
+    target_ulong dspc;
+
+    dspc = env->active_tc.DSPControl;
+    pos  = dspc & 0x1F;
+    size = (dspc >> 7) & 0x1F;
+    msb  = pos + size - 1;
+    lsb  = pos;
+
+    if (lsb > msb) {
+        return rt;
+    }
+
+    filter = ((int32_t)0x01 << size) - 1;
+    filter = filter << pos;
+    temprs = rs & filter;
+    temprt = rt & ~filter;
+    temp = temprs | temprt;
+
+    return (target_long)(int32_t)temp;
+}
+
+#if defined(TARGET_MIPS64)
+target_ulong helper_dinsv(CPUMIPSState *env, target_ulong rs, target_ulong rt)
+{
+    target_ulong dspctrl;
+    target_ulong filter;
+    uint8_t pos, size;
+    uint8_t msb, lsb;
+    uint64_t temp;
+
+    temp = rt;
+    dspctrl = env->active_tc.DSPControl;
+    pos = dspctrl & 0x7F;
+    size = (dspctrl >> 7) & 0x3F;
+
+    msb = pos + size - 1;
+    lsb = pos;
+
+    if ((lsb > msb) || (msb > 63)) {
+        return temp;
+    }
+
+    temp = 0;
+    filter = ((target_ulong)0x01 << size) - 1;
+    filter = filter << pos;
+
+    temp |= rs & filter;
+    temp |= rt & (~filter);
+
+    return temp;
+}
+#endif
+
 #undef MIPSDSP_LHI
 #undef MIPSDSP_LLO
 #undef MIPSDSP_HI

@@ -343,6 +343,11 @@ enum {
 #if defined(TARGET_MIPS64)
     OPC_DPAQ_W_QH_DSP  = 0x34 | OPC_SPECIAL3,
 #endif
+    /* DSP Bit/Manipulation Sub-class */
+    OPC_INSV_DSP       = 0x0C | OPC_SPECIAL3,
+#if defined(TARGET_MIPS64)
+    OPC_DINSV_DSP      = 0x0D | OPC_SPECIAL3,
+#endif
 };
 
 /* BSHFL opcodes */
@@ -450,6 +455,12 @@ enum {
     OPC_PRECEU_PH_QBR   = (0x1D << 6) | OPC_ABSQ_S_PH_DSP,
     OPC_PRECEU_PH_QBLA  = (0x1E << 6) | OPC_ABSQ_S_PH_DSP,
     OPC_PRECEU_PH_QBRA  = (0x1F << 6) | OPC_ABSQ_S_PH_DSP,
+    /* DSP Bit/Manipulation Sub-class */
+    OPC_BITREV          = (0x1B << 6) | OPC_ABSQ_S_PH_DSP,
+    OPC_REPL_QB         = (0x02 << 6) | OPC_ABSQ_S_PH_DSP,
+    OPC_REPLV_QB        = (0x03 << 6) | OPC_ABSQ_S_PH_DSP,
+    OPC_REPL_PH         = (0x0A << 6) | OPC_ABSQ_S_PH_DSP,
+    OPC_REPLV_PH        = (0x0B << 6) | OPC_ABSQ_S_PH_DSP,
 };
 
 #define MASK_CMPU_EQ_QB(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
@@ -518,6 +529,12 @@ enum {
     OPC_MULSA_W_PH    = (0x02 << 6) | OPC_DPA_W_PH_DSP,
 };
 
+#define MASK_INSV(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* DSP Bit/Manipulation Sub-class */
+    OPC_INSV = (0x00 << 6) | OPC_INSV_DSP,
+};
+
 #if defined(TARGET_MIPS64)
 #define MASK_ABSQ_S_QH(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
 enum {
@@ -539,6 +556,13 @@ enum {
     OPC_ABSQ_S_OB       = (0x01 << 6) | OPC_ABSQ_S_QH_DSP,
     OPC_ABSQ_S_PW       = (0x11 << 6) | OPC_ABSQ_S_QH_DSP,
     OPC_ABSQ_S_QH       = (0x09 << 6) | OPC_ABSQ_S_QH_DSP,
+    /* DSP Bit/Manipulation Sub-class */
+    OPC_REPL_OB         = (0x02 << 6) | OPC_ABSQ_S_QH_DSP,
+    OPC_REPL_PW         = (0x12 << 6) | OPC_ABSQ_S_QH_DSP,
+    OPC_REPL_QH         = (0x0A << 6) | OPC_ABSQ_S_QH_DSP,
+    OPC_REPLV_OB        = (0x03 << 6) | OPC_ABSQ_S_QH_DSP,
+    OPC_REPLV_PW        = (0x13 << 6) | OPC_ABSQ_S_QH_DSP,
+    OPC_REPLV_QH        = (0x0B << 6) | OPC_ABSQ_S_QH_DSP,
 };
 #endif
 
@@ -588,6 +612,14 @@ enum {
     OPC_PRECRQ_QH_PW      = (0x14 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQ_RS_QH_PW   = (0x15 << 6) | OPC_CMPU_EQ_OB_DSP,
     OPC_PRECRQU_S_OB_QH   = (0x0F << 6) | OPC_CMPU_EQ_OB_DSP,
+};
+#endif
+
+#if defined(TARGET_MIPS64)
+#define MASK_DINSV(op) (MASK_SPECIAL3(op) | (op & (0x1F << 6)))
+enum {
+    /* DSP Bit/Manipulation Sub-class */
+    OPC_DINSV = (0x00 << 6) | OPC_DINSV_DSP,
 };
 #endif
 
@@ -12679,6 +12711,75 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 check_dsp(ctx);
                 gen_helper_preceu_ph_qbra(cpu_gpr[rd], cpu_gpr[rt]);
                 break;
+            case OPC_BITREV:
+                check_dsp(ctx);
+                gen_helper_bitrev(cpu_gpr[rd], cpu_gpr[rt]);
+                break;
+            case OPC_REPL_QB:
+                check_dsp(ctx);
+                {
+                    target_long temp;
+
+                    imm = (ctx->opcode >> 16) & 0xFF;
+                    temp = ((int32_t)imm << 24 | \
+                            (int32_t)imm << 16 | \
+                            (int32_t)imm << 8  | \
+                            (int32_t)imm);
+                    tcg_gen_movi_tl(cpu_gpr[rd], temp);
+                    break;
+                }
+            case OPC_REPLV_QB:
+                check_dsp(ctx);
+                {
+                    TCGv t, temp_rd;
+
+                    t = tcg_temp_new();
+                    temp_rd = tcg_temp_new();
+
+                    /* we need t to save gpr[rt] 7..0 bits. */
+                    tcg_gen_ext8u_tl(t, cpu_gpr[rt]);
+                    tcg_gen_mov_tl(temp_rd, t);
+                    tcg_gen_shli_tl(t, t, 8);
+                    tcg_gen_or_tl(temp_rd, temp_rd, t);
+                    tcg_gen_mov_tl(t, temp_rd);
+                    tcg_gen_shli_tl(t, t, 16);
+                    tcg_gen_or_tl(temp_rd, temp_rd, t);
+#if defined(TARGET_MIPS64)
+                    tcg_gen_ext32s_i64(temp_rd, temp_rd);
+#endif
+                    tcg_gen_mov_tl(cpu_gpr[rd], temp_rd);
+
+                    tcg_temp_free(t);
+                    tcg_temp_free(temp_rd);
+                    break;
+                }
+            case OPC_REPL_PH:
+                check_dsp(ctx);
+                {
+                    imm = (ctx->opcode >> 16) & 0x03FF;
+                    tcg_gen_movi_tl(cpu_gpr[rd], \
+                                    (target_long)((int32_t)imm << 16 | \
+                                    (uint32_t)(uint16_t)imm));
+                    break;
+                }
+            case OPC_REPLV_PH:
+                check_dsp(ctx);
+                {
+                    TCGv t, temp_rd;
+
+                    t = tcg_temp_new();
+                    temp_rd = tcg_temp_new();
+
+                    tcg_gen_ext16u_tl(t, cpu_gpr[rt]);
+                    tcg_gen_ext16s_tl(temp_rd, cpu_gpr[rt]);
+                    tcg_gen_shli_tl(temp_rd, temp_rd, 16);
+                    tcg_gen_or_tl(temp_rd, temp_rd, t);
+                    tcg_gen_mov_tl(cpu_gpr[rd], temp_rd);
+
+                    tcg_temp_free(t);
+                    tcg_temp_free(temp_rd);
+                    break;
+                }
             default:            /* Invalid */
                 MIPS_INVAL("MASK ABSQ_S.PH");
                 generate_exception(ctx, EXCP_RI);
@@ -13179,6 +13280,22 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 break;
             }
             break;
+        case OPC_INSV_DSP:
+            op2 = MASK_INSV(ctx->opcode);
+            switch (op2) {
+            case OPC_INSV:
+                check_dsp(ctx);
+                {
+                    gen_helper_insv(cpu_gpr[rt], cpu_env,
+                                    cpu_gpr[rs], cpu_gpr[rt]);
+                    break;
+                }
+            default:            /* Invalid */
+                MIPS_INVAL("MASK INSV");
+                generate_exception(ctx, EXCP_RI);
+                break;
+            }
+            break;
 #if defined(TARGET_MIPS64)
         case OPC_DEXTM ... OPC_DEXT:
         case OPC_DINSM ... OPC_DINS:
@@ -13260,6 +13377,100 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 check_dsp(ctx);
                 gen_helper_preceu_qh_obra(cpu_gpr[rd], cpu_gpr[rt]);
                 break;
+            case OPC_REPL_OB:
+                check_dsp(ctx);
+                {
+                    target_long temp;
+
+                    imm = (ctx->opcode >> 16) & 0xFF;
+                    temp = imm;
+                    temp = (temp << 8) | temp;
+                    temp = (temp << 16) | temp;
+                    temp = (temp << 32) | temp;
+                    tcg_gen_movi_tl(cpu_gpr[rd], temp);
+                    break;
+                }
+            case OPC_REPL_PW:
+                check_dsp(ctx);
+                {
+                    target_long temp;
+
+                    imm = (ctx->opcode >> 16) & 0x03FF;
+                    imm = (int16_t)(imm << 6) >> 6;
+                    temp = ((target_long)imm << 32) \
+                           | ((target_long)imm & 0xFFFFFFFF);
+                    tcg_gen_movi_tl(cpu_gpr[rd], temp);
+                    break;
+                }
+            case OPC_REPL_QH:
+                check_dsp(ctx);
+                {
+                    target_long temp;
+
+                    imm = (ctx->opcode >> 16) & 0x03FF;
+                    imm = (int16_t)(imm << 6) >> 6;
+
+                    temp = ((uint64_t)(uint16_t)imm << 48) | \
+                           ((uint64_t)(uint16_t)imm << 32) | \
+                           ((uint64_t)(uint16_t)imm << 16) | \
+                           (uint64_t)(uint16_t)imm;
+                    tcg_gen_movi_tl(cpu_gpr[rd], temp);
+                    break;
+                }
+            case OPC_REPLV_OB:
+                check_dsp(ctx);
+                {
+                    TCGv immv, temp_rd;
+
+                    immv = tcg_const_tl(0);
+                    temp_rd = tcg_const_tl(0);
+
+                    tcg_gen_ext8u_tl(immv, cpu_gpr[rt]);
+                    tcg_gen_mov_tl(temp_rd, immv);
+                    tcg_gen_shli_tl(temp_rd, temp_rd, 8);
+                    tcg_gen_or_tl(temp_rd, temp_rd, immv);
+                    tcg_gen_mov_tl(immv, temp_rd);
+                    tcg_gen_shli_tl(temp_rd, temp_rd, 16);
+                    tcg_gen_or_tl(temp_rd, temp_rd, immv);
+                    tcg_gen_concat_tl_i64(temp_rd, temp_rd, temp_rd);
+
+                    gen_store_gpr(temp_rd, rd);
+
+                    tcg_temp_free(immv);
+                    tcg_temp_free(temp_rd);
+                    break;
+                }
+            case OPC_REPLV_PW:
+                check_insn(env, ctx, ASE_DSP);
+                {
+                    TCGv imm_v;
+                    imm_v = tcg_temp_new();
+
+                    tcg_gen_ext32u_i64(imm_v, cpu_gpr[rt]);
+                    tcg_gen_concat_tl_i64(cpu_gpr[rd], imm_v, imm_v);
+
+                    tcg_temp_free(imm_v);
+                    break;
+                }
+            case OPC_REPLV_QH:
+                check_insn(env, ctx, ASE_DSP);
+                {
+                    TCGv imm_v;
+                    TCGv temp_rd;
+
+                    imm_v = tcg_temp_new();
+                    temp_rd = tcg_temp_new();
+
+                    tcg_gen_ext16u_tl(imm_v, cpu_gpr[rt]);
+                    tcg_gen_mov_tl(temp_rd, imm_v);
+                    tcg_gen_shli_tl(temp_rd, temp_rd, 16);
+                    tcg_gen_or_tl(temp_rd, temp_rd, imm_v);
+                    tcg_gen_concat_tl_i64(cpu_gpr[rd], temp_rd, temp_rd);
+
+                    tcg_temp_free(imm_v);
+                    tcg_temp_free(temp_rd);
+                    break;
+                }
             case OPC_ABSQ_S_OB:
                 check_dspr2(ctx);
                 gen_helper_absq_s_ob(cpu_gpr[rd], cpu_env, cpu_gpr[rt]);
@@ -13621,6 +13832,22 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
             }
 #endif
 #if defined(TARGET_MIPS64)
+        case OPC_DINSV_DSP:
+            op2 = MASK_INSV(ctx->opcode);
+            switch (op2) {
+            case OPC_DINSV:
+                check_dsp(ctx);
+                gen_helper_dinsv(cpu_gpr[rt], cpu_env,
+                                 cpu_gpr[rs], cpu_gpr[rt]);
+                break;
+            default:            /* Invalid */
+                MIPS_INVAL("MASK DINSV");
+                generate_exception(ctx, EXCP_RI);
+                break;
+            }
+            break;
+#endif
+#if defined(TARGET_MIPS64)
         case OPC_SHLL_OB_DSP:
             op2 = MASK_SHLL_OB(ctx->opcode);
             switch (op2) {
@@ -13795,7 +14022,7 @@ static void decode_opc (CPUMIPSState *env, DisasContext *ctx, int *is_branch)
                 generate_exception(ctx, EXCP_RI);
                 break;
             }
-          break;
+            break;
 #endif
         default:            /* Invalid */
             MIPS_INVAL("special3");
